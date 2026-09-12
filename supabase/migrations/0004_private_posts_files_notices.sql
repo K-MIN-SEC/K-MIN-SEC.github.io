@@ -57,6 +57,7 @@ language sql stable security definer set search_path = public as $$
   select p.id,p.display_name,case when p.is_secret and not public.can_read_space(p.id) then '비밀글' else p.title end,
     p.created_at,p.is_secret,p.is_notice
   from public.space_posts p where p.status='visible' and (p_id is null or p.id=p_id)
+    and (not p.is_secret or public.can_read_space(p.id) or p.id=p_id)
   order by p.is_notice desc,p.created_at desc,p.id limit 20 offset greatest(0,least(p_offset,100000))
 $$;
 create function public.create_space_post(p_name text,p_title text,p_body text,p_link text default null,p_password text default null)
@@ -147,6 +148,15 @@ begin
   if not exists(select 1 from public.space_attachments where object_path=p_path and public.can_manage_space(post_id)) then raise exception 'Edit access denied'; end if;
   delete from public.space_attachments where object_path=p_path;
 end $$;
+
+create function private.delete_space_object() returns trigger
+language plpgsql security definer set search_path = public, storage as $$
+begin
+  delete from storage.objects where bucket_id='space-files' and name=old.object_path;
+  return old;
+end $$;
+create trigger delete_space_object_after_metadata
+after delete on public.space_attachments for each row execute function private.delete_space_object();
 
 -- Always private: public object URLs must never bypass the post password.
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)

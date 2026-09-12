@@ -1,6 +1,6 @@
 # MINSEC
 
-> **현재 상태: 개발 중인 코드 공유본입니다.** 개인 포트폴리오와 기존 커뮤니티 구현을 포함합니다. 비밀글·첨부파일·공지 기능은 구현 도중 중단된 상태이며, `0004_private_posts_files_notices.sql`은 아직 실제 Supabase에 적용하거나 검증하지 않았습니다. 해당 기능을 완성된 기능으로 사용하지 마세요. GitHub Pages 공개 배포도 아직 진행하지 않았습니다.
+> **현재 상태: 개발 중인 코드 공유본입니다.** 개인 포트폴리오와 기존 커뮤니티 구현을 포함합니다. 비밀글·첨부파일·공지 migration은 별도 로컬 DB에서 권한 검증을 통과했지만 실제 Supabase에는 아직 적용하지 않았습니다. `PUBLIC_SPACE_EXTENDED` 기본값은 `false`이며 실제 적용·QA 전에는 운영 기능으로 사용하지 않습니다. GitHub Pages 공개 배포도 아직 진행하지 않았습니다.
 
 공개 프로필에는 이름·학교·연락용 이메일만 포함하며 전화번호·생년월일은 제외했습니다. `.env`와 인증 정보는 저장소에 포함하지 않습니다.
 
@@ -157,7 +157,7 @@ GitHub Pages 배포를 원하면:
 
 사이트의 이름·학교·연락처는 `src/data/site.json`에서 관리합니다. 현재 공개 저장소에는 이름, 학교와 연락용 이메일만 포함하며 전화번호와 생년월일은 제외했습니다.
 
-확정된 서비스 경계, 권한, 보안 원칙과 A–E 작업 순서는 [`docs/architecture-decisions.md`](docs/architecture-decisions.md)에 기록합니다. 비밀글·첨부파일·공지는 `PUBLIC_SPACE_EXTENDED=true`와 migration 0004가 모두 준비된 뒤에만 활성화합니다. 기본값은 기존 공개 Space와 호환되는 모드입니다.
+확정된 서비스 경계, 권한, 보안 원칙과 A–E 작업 순서는 [`docs/architecture-decisions.md`](docs/architecture-decisions.md)에 기록합니다. 비밀글·첨부파일·공지는 `PUBLIC_SPACE_EXTENDED=true`와 migration 0004가 모두 준비된 뒤에만 활성화합니다. 기본값은 기존 공개 Space와 호환되는 모드입니다. 적용·복구 절차는 [`docs/space-0004-rollout.md`](docs/space-0004-rollout.md), 공통 반응 이전안은 [`docs/content-target-registry-migration.md`](docs/content-target-registry-migration.md), Creator Space 분리안은 [`docs/creator-space-separation.md`](docs/creator-space-separation.md)를 확인하세요.
 
 ## 분석 확장 구조
 
