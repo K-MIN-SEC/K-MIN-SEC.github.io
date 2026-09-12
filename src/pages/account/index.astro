@@ -1,0 +1,52 @@
+---
+import Base from '../../layouts/Base.astro';
+import { url } from '../../lib/urls';
+---
+<Base title="Account · 로그인" description="MINSEC 로그인과 내 계정 관리" noindex>
+  <header class="page-header"><span class="eyebrow">WELCOME TO MINSEC</span><h1>로그인<span class="brand-period">.</span></h1><p>작업을 공유하고, 함께 이야기해요. 이메일로 받은 링크를 누르면 로그인됩니다.</p></header>
+  <section class="account-panel" aria-labelledby="account-title">
+    <h2 id="account-title">이메일로 시작하기</h2>
+    <p class="notice" data-account-status role="status">계정 서비스를 확인하고 있습니다.</p>
+    <form data-account-form><fieldset class="community-fields" disabled><label>이메일<input name="email" type="email" autocomplete="email" required placeholder="you@example.com" /></label><button class="button primary" type="submit">로그인 링크 받기</button><p>처음 방문하셨다면 같은 절차로 계정이 만들어집니다. 이메일은 게시글에 표시하지 않습니다.</p></fieldset></form>
+    <div data-account-session hidden><p data-account-email></p><div class="form-actions"><a class="button primary" href={url('space/#write')}>Space에 글쓰기</a><a class="button secondary" data-account-admin href={url('admin/')} hidden>관리자 화면</a><button class="button secondary" data-account-logout type="button">로그아웃</button></div></div>
+  </section>
+</Base>
+<script>
+  import { supabase, messageOf } from '../../lib/supabase';
+  const form = document.querySelector<HTMLFormElement>('[data-account-form]')!;
+  const fields = form.querySelector<HTMLFieldSetElement>('fieldset')!;
+  const status = document.querySelector<HTMLElement>('[data-account-status]')!;
+  const sessionBox = document.querySelector<HTMLElement>('[data-account-session]')!;
+  async function refresh() {
+    if (!supabase) { status.textContent = '아직 계정 서비스가 연결되지 않았습니다. 연결이 끝나면 이 화면에서 이메일로 로그인할 수 있습니다.'; return; }
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    const user = data.session?.user;
+    const signedIn = Boolean(user && !user.is_anonymous);
+    form.hidden = signedIn; fields.disabled = signedIn; sessionBox.hidden = !signedIn;
+    status.textContent = signedIn ? '로그인되었습니다.' : '이메일을 입력하면 로그인 링크를 보내드립니다.';
+    if (signedIn && user) {
+      document.querySelector<HTMLElement>('[data-account-email]')!.textContent = user.email ?? '로그인한 계정';
+      const admin = await supabase.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
+      document.querySelector<HTMLElement>('[data-account-admin]')!.hidden = !admin.data;
+    }
+  }
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault(); if (!supabase) return;
+    const email = String(new FormData(form).get('email')).trim(); fields.disabled = true;
+    try {
+      const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: new URL(import.meta.env.BASE_URL + 'account/', location.origin).href } });
+      if (error) throw error;
+      status.textContent = '로그인 링크를 보냈습니다. 이메일을 확인해 주세요.';
+    } catch (error) { status.textContent = messageOf(error); }
+    finally { fields.disabled = false; }
+  });
+  document.querySelector('[data-account-logout]')!.addEventListener('click', async () => {
+    const result = await supabase?.auth.signOut();
+    if (result?.error) { status.textContent = messageOf(result.error); return; }
+    location.reload();
+  });
+  // Auth callbacks stay synchronous; the database lookup runs after the auth lock is released.
+  supabase?.auth.onAuthStateChange(() => { setTimeout(() => refresh().catch((error) => { status.textContent = messageOf(error); }), 0); });
+  refresh().catch((error) => { status.textContent = messageOf(error); });
+</script>

@@ -1,0 +1,50 @@
+---
+import Base from '../../layouts/Base.astro';
+import { url } from '../../lib/urls';
+import { cmsConfig } from '../../lib/cms-config';
+const available = import.meta.env.DEV || Boolean(import.meta.env.PUBLIC_CMS_AUTH_URL);
+---
+<Base title="Editor · 사이트 콘텐츠 편집" description="프로젝트, Play, 미디어, Devlog와 프로필을 편집합니다." noindex>
+  <header class="page-header"><span class="eyebrow">CONTENT EDITOR</span><h1>콘텐츠 편집<span class="brand-period">.</span></h1><p>프로젝트와 Play 카드를 추가하거나 수정하고, 이미지·영상·Devlog를 관리합니다.</p></header>
+  <a class="text-link" href={url('admin/')}>← 관리자 홈</a>
+  <p class="notice" data-cms-status>{import.meta.env.DEV ? '로컬 편집 모드입니다. 저장하면 이 컴퓨터의 사이트 파일이 바뀝니다. 공개 사이트 반영은 별도 배포가 필요합니다.' : available ? 'GitHub 계정으로 로그인해 콘텐츠를 편집하세요. 저장 후 배포하면 공개 사이트에 반영됩니다.' : '공개 사이트 편집은 GitHub 인증 서비스 연결 후 사용할 수 있습니다. 지금은 로컬 사이트의 관리자에서 편집해 주세요.'}</p>
+  {available && <button class="button primary" data-cms-open data-script={url('vendor/decap/decap-cms.js')}>편집기 열기</button>}
+  <div id="nc-root"></div>
+  <script is:inline type="application/json" id="cms-config" set:html={JSON.stringify(cmsConfig).replace(/</g, '\\u003c')} />
+</Base>
+<script>
+  import { projectSchema, playSchema, unique } from '../../lib/content-schemas';
+  import { youtubeEmbed } from '../../lib/media';
+  import { z } from 'astro/zod';
+  interface CMSEntry { get(key: 'data'): { toJS(): { items?: unknown[] } }; get(key: 'collection' | 'slug'): string; }
+  const button = document.querySelector<HTMLButtonElement>('[data-cms-open]');
+  button?.addEventListener('click', async () => {
+    const status = document.querySelector<HTMLElement>('[data-cms-status]')!;
+    const config = JSON.parse(document.querySelector('#cms-config')!.textContent!);
+    button.disabled = true;
+    try {
+      if (config.local_backend) {
+        const response = await fetch(config.local_backend.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'info' }), signal: AbortSignal.timeout(4000) });
+        if (!response.ok) throw new Error('로컬 편집 서버를 켜주세요. 사이트 폴더에서 npm run cms를 실행하면 됩니다.');
+      }
+      const cmsWindow = window as typeof window & { CMS_MANUAL_INIT?: boolean; CMS?: { init: (options: unknown) => void; registerEventListener: (event: { name: string; handler: (event: { entry: CMSEntry }) => void }) => void } };
+      cmsWindow.CMS_MANUAL_INIT = true;
+      if (!cmsWindow.CMS) await new Promise<void>((resolve, reject) => {
+        const script = document.createElement('script'); script.src = button.dataset.script!;
+        script.onload = () => resolve(); script.onerror = () => { script.remove(); reject(new Error('편집기를 불러오지 못했습니다.')); }; document.head.append(script);
+      });
+      cmsWindow.CMS!.registerEventListener({ name: 'preSave', handler: ({ entry }) => {
+        if (entry.get('collection') !== 'portfolio') return;
+        const data = entry.get('data').toJS();
+        try {
+          if (entry.get('slug') === 'projects') {
+            const entries = unique(z.array(projectSchema).parse(data.items ?? []), 'project');
+            entries.forEach((item) => item.videos.forEach((video) => { if (video.type === 'youtube') youtubeEmbed(video.src); }));
+          } else unique(z.array(playSchema).parse(data.items ?? []), 'play');
+        } catch (error) { throw new Error(`저장할 내용을 확인해 주세요. ${error instanceof Error ? error.message : ''}`); }
+      } });
+      cmsWindow.CMS!.init({ config: { ...config, load_config_file: false } });
+      button.hidden = true;
+    } catch (error) { status.textContent = error instanceof Error && error.message !== 'Failed to fetch' ? error.message : '로컬 편집 서버가 꺼져 있습니다. 사이트 폴더에서 npm run cms를 실행한 뒤 다시 열어주세요.'; button.disabled = false; }
+  });
+</script>

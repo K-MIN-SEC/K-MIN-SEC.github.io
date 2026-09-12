@@ -1,0 +1,11 @@
+---
+import Base from '../../layouts/Base.astro';
+import PlayCard from '../../components/PlayCard.astro';
+import { playItems } from '../../lib/content';
+---
+<Base title="Play · Playable Lab" description={`${playItems.map((p) => p.title).join(', ')}. 브라우저 플레이 데모를 준비하는 MINSEC의 작은 실험실입니다.`}>
+  <header class="page-header"><span class="eyebrow">SMALL BUILDS, HANDS-ON IDEAS</span><h1>Playable Lab<span class="brand-period">.</span></h1><p>직접 플레이하면 더 잘 전해지는 것들.<br />프로젝트의 핵심 경험을 작은 웹 빌드로 준비합니다.</p></header>
+  {playItems.length > 0 && playItems.every((item) => item.status === 'coming-soon') && <p class="notice">아직 공개된 데모는 없습니다. 플레이 가능한 빌드가 준비되면 이곳에서 바로 만나볼 수 있습니다.</p>}
+  <section class="play-grid" aria-label="플레이 데모">{playItems.map((item, index) => <PlayCard item={item} index={index} />)}</section>
+  {playItems.length === 0 && <p class="empty">다음 플레이 실험을 준비하고 있습니다.</p>}
+</Base>

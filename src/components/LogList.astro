@@ -1,0 +1,10 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { url } from '../lib/urls';
+interface Props { posts: CollectionEntry<'devlog'>[]; headingLevel?: 'h2' | 'h3'; }
+const { posts, headingLevel: Heading = 'h3' } = Astro.props;
+---
+<div class="log-list">
+  {posts.map((post) => <article class="log-row"><time datetime={post.data.date.toISOString()}>{post.data.date.toISOString().slice(0, 10).replaceAll('-', '.')}</time><div><span class="eyebrow">{post.data.category}{post.data.sample && ' · 예시 글'}</span><Heading><a href={url(`devlog/${post.id}/`)} data-event="devlog_open" data-content-id={post.id}>{post.data.title}</a></Heading><p>{post.data.description}</p></div><span aria-hidden="true" class="log-arrow">↗</span></article>)}
+  {posts.length === 0 && <p class="empty">아직 공개된 기록이 없습니다. 다음 실험을 준비하고 있어요.</p>}
+</div>

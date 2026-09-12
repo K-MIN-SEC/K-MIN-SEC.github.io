@@ -1,0 +1,117 @@
+{
+  "items": [
+    {
+      "id": "one-stroke",
+      "title": "One Stroke",
+      "subtitle": "DRAW YOUR NEXT MOVE.",
+      "category": "Gesture-based action",
+      "status": "개발 중",
+      "year": "IN DEVELOPMENT",
+      "accent": "lime",
+      "featured": true,
+      "description": "한 번의 드로잉이 다음 공격이 되는 액션 게임. 그리는 시간까지 전투의 선택으로 만듭니다.",
+      "tags": [
+        "Game design",
+        "Combat",
+        "Unity"
+      ],
+      "sections": [
+        {
+          "title": "손끝의 선택이 전투가 되도록",
+          "body": "공격 버튼을 누르는 대신 제스처를 그려 행동을 선택합니다. 무엇을 그릴지뿐 아니라 언제 그리기 시작할지도 전투의 일부가 되는 경험을 탐색합니다."
+        },
+        {
+          "title": "지금은 전투의 핵심에 집중합니다",
+          "body": "현재 독립 실행 가능한 Combat Mode를 개발하고 있습니다. 이야기와 필드 진행에서 분리해 드로잉 입력, 보스 대응, 재도전의 흐름을 집중적으로 다듬는 단계입니다."
+        },
+        {
+          "title": "Combat에서 Challenge로",
+          "body": "이 Combat Mode는 향후 Challenge와 Boss Rush의 기반으로도 사용할 예정입니다. 웹 데모는 핵심 전투를 짧게 체험하는 별도 빌드로 준비하며, 현재 공개된 플레이 빌드는 없습니다."
+        }
+      ]
+    },
+    {
+      "id": "local-character-ai",
+      "title": "Local Character AI Project",
+      "internalName": "RECO",
+      "subtitle": "A CHARACTER, CLOSER.",
+      "category": "Local AI · R&D",
+      "status": "R&D 진행 중",
+      "year": "ONGOING RESEARCH",
+      "accent": "mint",
+      "featured": true,
+      "description": "로컬에서 대화하고, 기억하고, 목소리로 반응하는 캐릭터 AI를 연구합니다.",
+      "tags": [
+        "Local LLM",
+        "Memory",
+        "Voice"
+      ],
+      "sections": [
+        {
+          "title": "대화 너머의 캐릭터 경험",
+          "body": "Local LLM, Memory, Search, Voice, Desktop UI를 연결하는 개인 R&D 프로젝트입니다. 각 요소를 구현하고 통합하며, 대화가 이어지는 캐릭터 경험을 탐색하고 있습니다."
+        },
+        {
+          "title": "내 컴퓨터에서 가능한 범위를 찾으며",
+          "body": "현재 하드웨어의 메모리와 처리 성능에 맞춰 모델과 기능 구성을 조정하고 있습니다. 응답 품질, 대기 시간, 자원 사용량의 균형을 찾는 과정 자체를 개발 기록으로 남깁니다."
+        },
+        {
+          "title": "웹에서는 경험을 작게 전달합니다",
+          "body": "데스크톱 실행 환경을 그대로 옮기기보다, 향후 대화 흐름과 기억의 역할을 보여주는 웹용 시뮬레이션을 검토합니다. 현재 웹에서 실행되는 AI 데모는 제공하지 않습니다."
+        }
+      ]
+    },
+    {
+      "id": "object-head-battle",
+      "title": "Object Head Battle",
+      "subtitle": "ODD HEADS. NEW RULES.",
+      "category": "Battle prototype",
+      "status": "프로토타입",
+      "year": "WORK IN PROGRESS",
+      "accent": "stone",
+      "featured": false,
+      "description": "오브젝트 헤드 캐릭터를 중심으로 전투의 개성과 플레이 가능성을 탐색하는 프로젝트입니다.",
+      "tags": [
+        "Prototype",
+        "Battle",
+        "Character"
+      ],
+      "sections": [
+        {
+          "title": "캐릭터에서 시작하는 전투",
+          "body": "오브젝트 헤드라는 캐릭터 아이디어에서 출발한 전투 프로젝트입니다. 세부 규칙과 공개 범위는 개발 상황에 맞춰 업데이트할 예정입니다."
+        },
+        {
+          "title": "공개할 경험의 범위",
+          "body": "향후 로컬 1인 플레이나 더미 상대 샌드박스처럼 작게 체험할 수 있는 형식을 검토합니다. 현재 공개 플레이 빌드는 없습니다."
+        }
+      ]
+    },
+    {
+      "id": "erase",
+      "title": "ERASE",
+      "subtitle": "WHAT REMAINS?",
+      "category": "Game prototype",
+      "status": "프로토타입",
+      "year": "WORK IN PROGRESS",
+      "accent": "sage",
+      "featured": false,
+      "description": "핵심 스테이지를 짧게 경험할 수 있는 웹 데모를 준비하는 게임 프로젝트입니다.",
+      "tags": [
+        "Game design",
+        "Prototype",
+        "Web demo"
+      ],
+      "sections": [
+        {
+          "title": "작은 플레이 경험부터",
+          "body": "ERASE의 핵심 경험을 전달할 수 있는 스테이지 단위의 공개를 검토하고 있습니다. 상세한 게임 규칙과 제작 과정은 정리되는 대로 기록할 예정입니다."
+        },
+        {
+          "title": "웹 데모 준비",
+          "body": "웹 데모는 핵심 스테이지 1개를 목표로 준비합니다. 현재는 Play 페이지에서 준비 상태만 확인할 수 있습니다."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+---
+import Base from '../../layouts/Base.astro';
+import { url } from '../../lib/urls';
+import { siteInfo } from '../../lib/site-info';
+
+const profile = [
+  { label: '이름', value: siteInfo.name },
+  { label: '소속', value: siteInfo.school },
+  { label: '전공', value: siteInfo.major },
+  { label: '학번', value: siteInfo.classYear },
+  { label: '생년월일', value: siteInfo.birthDate },
+];
+---
+<Base
+  title="About · 김민석(MINSEC) 소개"
+  description="서일대학교 AI게임융합학과에 재학 중인 김민석(MINSEC). 게임을 만들고 생성형 AI를 탐구하며 제작 과정을 기록합니다."
+  schema={{
+    '@type': 'Person',
+    name: '김민석',
+    alternateName: 'MINSEC',
+    url: new URL(url('about/'), Astro.site).href,
+    affiliation: { '@type': 'CollegeOrUniversity', name: '서일대학교' },
+    knowsAbout: ['Game design', 'Generative AI', 'Prototyping'],
+  }}
+>
+  <header class="page-header">
+    <span class="eyebrow">THE PERSON BEHIND THE PROJECTS</span>
+    <h1>Hello, I’m MINSEC<span class="brand-period">.</span></h1>
+  </header>
+
+  <div class="about-grid">
+    <section>
+      <h2 class="about-statement">머릿속의 ‘이런 건 어떨까’를<br /><em>직접 만져볼 수 있는 경험으로.</em></h2>
+      <p>게임을 만들고, 생성형 AI를 탐구합니다. 작은 프로토타입으로 아이디어를 확인하고, 그 과정에서 생기는 질문을 다음 작업으로 이어갑니다.</p>
+      <p>이곳은 완성된 작업과 진행 중인 실험을 함께 모으는 개인 사이트입니다. 프로젝트의 방향, 만드는 과정, 앞으로 공개할 플레이 경험을 기록합니다.</p>
+      <a class="button primary" href={url('projects/')}>작업 살펴보기 <span aria-hidden="true">↗</span></a>
+    </section>
+
+    <aside class="profile-card" aria-labelledby="profile-title">
+      <div class="profile-card-heading">
+        <div>
+          <span class="eyebrow">PROFILE / 2026</span>
+          <h2 id="profile-title">{siteInfo.name} <small>{siteInfo.brand}</small></h2>
+        </div>
+        <span class="profile-mark" aria-hidden="true">m:s</span>
+      </div>
+      <dl class="profile-list">
+        {profile.filter((item) => item.value).map((item) => <div><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
+        <div><dt>이메일</dt><dd><a href={`mailto:${siteInfo.email}`}>{siteInfo.email}</a></dd></div>
+        {siteInfo.phone && <div><dt>전화</dt><dd><a href={`tel:${siteInfo.phoneHref || siteInfo.phone}`}>{siteInfo.phone}</a></dd></div>}
+      </dl>
+    </aside>
+  </div>
+
+  <section class="about-focus" aria-labelledby="focus-title">
+    <div class="section-heading"><div><span class="eyebrow">WHAT I EXPLORE</span><h2 id="focus-title">관심과 작업의 방향</h2></div></div>
+    <div class="about-focus-grid">
+      <article class="about-item"><span class="eyebrow">01 / GAME</span><h3>플레이로 전달하는 아이디어</h3><p>입력과 전투, 선택과 피드백. 플레이어가 직접 경험하는 규칙을 고민합니다.</p></article>
+      <article class="about-item"><span class="eyebrow">02 / AI</span><h3>생성형 AI로 확장하는 경험</h3><p>텍스트, 이미지, 음성, 로컬 모델을 포괄적으로 다루며 새로운 상호작용의 가능성을 탐색합니다.</p></article>
+      <article class="about-item"><span class="eyebrow">03 / PROCESS</span><h3>만드는 과정까지 남기기</h3><p>잘된 결과뿐 아니라 바꾼 방향과 남은 질문도 기록합니다. 다음 시도의 출발점이 되도록요.</p></article>
+    </div>
+  </section>
+</Base>

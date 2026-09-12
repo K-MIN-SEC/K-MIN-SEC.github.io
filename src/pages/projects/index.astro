@@ -1,0 +1,11 @@
+---
+import Base from '../../layouts/Base.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { projects } from '../../lib/content';
+---
+<Base title="Projects · 게임과 로컬 AI 프로젝트" description={`${projects.map((p) => p.title).join(', ')}. MINSEC이 개발하고 탐구하는 프로젝트와 현재 진행 상태를 소개합니다.`}>
+  <header class="page-header"><span class="eyebrow">THE PROJECT ARCHIVE</span><h1>Projects<span class="brand-period">.</span></h1><p>만들고 싶은 경험에서 출발합니다.<br />게임과 생성형 AI, 지금까지의 탐색과 다음 단계.</p></header>
+  <div class="intro-rule"><span>ALL PROJECTS / {String(projects.length).padStart(2, '0')}</span><span>진행 중인 작업을 함께 기록합니다.</span></div>
+  <section aria-label="전체 프로젝트" class="project-grid">{projects.map((project, index) => <ProjectCard project={project} index={index} headingLevel="h2" />)}</section>
+  {projects.length === 0 && <p class="empty">새로운 프로젝트를 준비하고 있습니다.</p>}
+</Base>

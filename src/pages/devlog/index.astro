@@ -1,0 +1,11 @@
+---
+import Base from '../../layouts/Base.astro';
+import LogList from '../../components/LogList.astro';
+import { getCollection } from 'astro:content';
+const posts = (await getCollection('devlog', ({ data }) => !data.draft)).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+<Base title="Devlog · 개발과 실험의 기록" description="게임잼 스코프, 드로잉 전투 설계, 로컬 캐릭터 AI 개발. MINSEC의 선택과 고민을 기록하는 개발 노트입니다.">
+  <header class="page-header"><span class="eyebrow">NOTES FROM THE WORKBENCH</span><h1>Devlog<span class="brand-period">.</span></h1><p>무엇을 만들었는지, 왜 그렇게 만들었는지.<br />결과 옆에 과정을 남깁니다.</p></header>
+  {posts.some((post) => post.data.sample) && <p class="notice">‘예시 글’은 사이트의 첫 구성을 위한 초안입니다. 실제 실험 결과와 회고는 개발 기록을 바탕으로 업데이트합니다.</p>}
+  <section aria-label="개발 기록"><LogList posts={posts} headingLevel="h2" /></section>
+</Base>

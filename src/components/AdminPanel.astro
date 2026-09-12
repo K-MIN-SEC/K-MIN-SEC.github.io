@@ -1,0 +1,83 @@
+---
+import { url } from '../lib/urls';
+---
+<section class="admin-panel" data-admin-panel aria-labelledby="admin-title">
+  <h2 id="admin-title">커뮤니티 관리</h2>
+  <p class="notice" data-admin-status role="status">관리자 상태를 확인하는 중입니다.</p>
+  <a class="button secondary" data-admin-login href={url('account/')}>관리자 계정으로 로그인 →</a>
+  <fieldset class="community-fields" data-admin-dashboard disabled>
+    <div class="admin-summary"><label>관리할 내용<select data-admin-filter><option value="reports">처리할 신고</option><option value="space_post">Space 게시글</option><option value="space_comment">Space 답글</option><option value="project_comment">프로젝트 댓글</option></select></label><button class="button secondary" data-admin-reload type="button">새로고침</button></div>
+    <p data-admin-count>관리자 로그인 후 목록이 표시됩니다.</p>
+    <div data-admin-list class="report-list"></div>
+    <button class="button secondary" data-admin-more type="button" hidden>다음 30개</button>
+  </fieldset>
+</section>
+<script>
+  import { messageOf, supabase } from '../lib/supabase';
+  import { contentActions, contentTables, type ContentType } from '../lib/content-actions';
+  const root = document.querySelector<HTMLElement>('[data-admin-panel]')!;
+  const status = root.querySelector<HTMLElement>('[data-admin-status]')!;
+  const login = root.querySelector<HTMLElement>('[data-admin-login]')!;
+  const dashboard = root.querySelector<HTMLFieldSetElement>('[data-admin-dashboard]')!;
+  const list = root.querySelector<HTMLElement>('[data-admin-list]')!;
+  const filter = root.querySelector<HTMLSelectElement>('[data-admin-filter]')!;
+  const count = root.querySelector<HTMLElement>('[data-admin-count]')!;
+  const more = root.querySelector<HTMLButtonElement>('[data-admin-more]')!;
+  const refresh = root.querySelector<HTMLButtonElement>('[data-admin-reload]')!;
+  let page = 0;
+  const el = (tag: string, value: string) => { const node = document.createElement(tag); node.textContent = value; return node; };
+  async function load() {
+    if (!supabase) { status.textContent = '커뮤니티 서비스 연결 전입니다. 연결 후 관리자 계정으로 로그인하면 게시글·댓글 수정, 삭제, 숨김과 신고 처리를 할 수 있습니다.'; return; }
+    const { data, error } = await supabase.auth.getSession(); if (error) throw error;
+    const user = data.session?.user;
+    dashboard.disabled = true; list.replaceChildren(); more.hidden = true;
+    if (!user || user.is_anonymous) { status.textContent = '관리자 계정으로 로그인해 주세요.'; return; }
+    const admin = await supabase.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
+    if (admin.error) throw admin.error;
+    if (!admin.data) { status.textContent = '이 계정에는 관리자 권한이 없습니다. 내 계정에서 로그인 상태를 확인해 주세요.'; return; }
+    login.hidden = true;
+    const type = filter.value;
+    let total = 0;
+    if (type === 'reports') {
+      const result = await supabase.from('reports').select('id,target_type,target_id,reason,created_at', { count: 'exact' }).eq('status', 'open').order('created_at', { ascending: false }).range(page * 30, page * 30 + 29);
+      if (result.error) throw result.error; total = result.count ?? 0;
+      for (const report of result.data) {
+        const card = el('article', ''); card.className = 'report-card';
+        const targetType = report.target_type as ContentType;
+        const target = await supabase.from(contentTables[targetType]).select('*').eq('id', report.target_id).maybeSingle();
+        if (target.error) throw target.error;
+        const reasons: Record<string, string> = { spam: '스팸 / 광고', harassment: '괴롭힘 / 혐오', unsafe: '개인정보 / 위험한 내용', other: '기타' };
+        card.append(el('h3', reasons[report.reason] ?? report.reason), el('p', new Date(report.created_at).toLocaleString('ko-KR')));
+        if (target.data) card.append(el('strong', target.data.title || target.data.display_name), el('p', target.data.body));
+        else card.append(el('p', '원문이 삭제되어 확인할 수 없습니다.'));
+        const actions = el('div', ''); actions.className = 'form-actions';
+        for (const action of ['dismiss', 'hide']) {
+          const button = document.createElement('button'); button.type = 'button'; button.className = 'button secondary'; button.textContent = action === 'hide' ? '내용 숨기기' : '신고 기각'; button.disabled = action === 'hide' && !target.data;
+          button.addEventListener('click', async () => {
+            button.disabled = true;
+            try { const response = await supabase!.rpc('moderate_report', { p_report_id: report.id, p_action: action }); if (response.error) throw response.error; await load(); }
+            catch (error) { status.textContent = messageOf(error); } finally { button.disabled = action === 'hide' && !target.data; }
+          }); actions.append(button);
+        }
+        card.append(actions); list.append(card);
+      }
+    } else {
+      const contentType = type as ContentType;
+      const result = await supabase.from(contentTables[contentType]).select('*', { count: 'exact' }).order('created_at', { ascending: false }).range(page * 30, page * 30 + 29);
+      if (result.error) throw result.error; total = result.count ?? 0;
+      for (const item of result.data) {
+        const card = el('article', ''); card.className = 'report-card';
+        card.append(el('h3', item.title || item.display_name), el('p', `${item.display_name} · ${item.status === 'hidden' ? '숨김' : '공개'} · ${new Date(item.created_at).toLocaleString('ko-KR')}`), el('p', item.body), contentActions(item, contentType, load, status, true)); list.append(card);
+      }
+    }
+    dashboard.disabled = false;
+    count.textContent = `전체 ${total}개${total ? ` · ${page * 30 + 1}–${Math.min(total, page * 30 + 30)}` : ''}`;
+    more.hidden = (page + 1) * 30 >= total;
+    status.textContent = total ? '내용을 검토하고 수정하거나 숨길 수 있습니다.' : '표시할 항목이 없습니다.';
+  }
+  const run = () => load().catch((error) => { status.textContent = messageOf(error); refresh.disabled = false; });
+  filter.addEventListener('change', () => { page = 0; run(); });
+  refresh.addEventListener('click', () => { page = 0; run(); });
+  more.addEventListener('click', () => { page++; run(); });
+  run();
+</script>

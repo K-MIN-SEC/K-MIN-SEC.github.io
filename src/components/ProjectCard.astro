@@ -1,0 +1,21 @@
+---
+import type { Project } from '../lib/content';
+import { url } from '../lib/urls';
+interface Props { project: Project; index?: number; headingLevel?: 'h2' | 'h3'; }
+const { project: p, index = 0, headingLevel: Heading = 'h3' } = Astro.props;
+const coverSrc = p.coverImage?.startsWith('/') ? url(p.coverImage) : p.coverImage;
+---
+<article class:list={['project-card', `accent-${p.accent}`]}>
+  <a class="project-link" href={url(`projects/${p.id}/`)} data-event="project_open" data-content-id={p.id}>
+    <div class:list={['project-cover', p.coverImage && 'has-image']}>
+      {coverSrc && <img class="project-cover-image" src={coverSrc} alt={p.coverAlt ?? ''} loading="lazy" width="960" height="500" />}
+      <div class="project-cover-shade" aria-hidden="true"></div>
+      <div class="cover-meta"><span>PROJECT / {String(index + 1).padStart(2, '0')}</span><span>{p.category}</span></div>
+      <div class="cover-title">{p.title}<span>{p.subtitle}</span></div>
+      <div class="cover-bottom"><span>{p.year}</span><span aria-hidden="true">↗</span></div>
+    </div>
+    <div class="card-heading"><Heading>{p.title}</Heading><span class="status">{p.status}</span></div>
+    <p>{p.description}</p>
+    <ul class="tags" aria-label="기술과 주제">{p.tags.map((tag) => <li>{tag}</li>)}</ul>
+  </a>
+</article>

@@ -1,0 +1,18 @@
+---
+import { projects, type PlayItem } from '../lib/content';
+import { url } from '../lib/urls';
+interface Props { item: PlayItem; index?: number; }
+const { item, index = 0 } = Astro.props;
+const project = projects.find((p) => p.id === item.projectId);
+const demoHref = item.demoUrl?.startsWith('/') ? url(item.demoUrl) : item.demoUrl;
+const coverSrc = item.coverImage?.startsWith('/') ? url(item.coverImage) : item.coverImage;
+---
+<article class:list={['play-card', `accent-${item.accent}`]}>
+  {coverSrc && <img class="play-card-image" src={coverSrc} alt={item.coverAlt ?? ''} loading="lazy" width="800" height="450" />}
+  <div class="play-top"><span class="eyebrow">LAB / {String(index + 1).padStart(2, '0')}</span><span aria-hidden="true" class="play-glyph">▷</span></div>
+  <span class="eyebrow">{item.kind}</span><h2>{item.title}</h2><p>{item.description}</p>
+  <div class="play-actions">
+    {item.status === 'available' && demoHref ? <a class="button primary" href={demoHref} data-event="demo_open" data-content-id={item.id}>데모 플레이 <span aria-hidden="true">↗</span></a> : <span class="demo-pending">Playable demo 준비 중</span>}
+    {project && <a class="text-link" href={url(`projects/${project.id}/`)} data-event="project_open" data-content-id={project.id}>프로젝트 보기 <span aria-hidden="true">↗</span></a>}
+  </div>
+</article>

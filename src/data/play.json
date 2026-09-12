@@ -1,0 +1,42 @@
+{
+  "items": [
+    {
+      "id": "one-stroke-demo",
+      "title": "One Stroke",
+      "kind": "COMBAT DEMO",
+      "description": "드로잉과 보스 대응에 집중하는 짧은 전투 체험.",
+      "status": "coming-soon",
+      "projectId": "one-stroke",
+      "accent": "lime",
+      "demoUrl": null
+    },
+    {
+      "id": "matchibi-demo",
+      "title": "MATCHIBI",
+      "kind": "WEB GAME",
+      "description": "브라우저에서 바로 플레이할 수 있는 빌드를 준비합니다.",
+      "status": "coming-soon",
+      "accent": "mint",
+      "demoUrl": null
+    },
+    {
+      "id": "erase-demo",
+      "title": "ERASE",
+      "kind": "SINGLE-STAGE DEMO",
+      "description": "하나의 핵심 스테이지로 만나보는 ERASE.",
+      "status": "coming-soon",
+      "projectId": "erase",
+      "accent": "sage",
+      "demoUrl": null
+    },
+    {
+      "id": "generation-ship-demo",
+      "title": "세대우주선",
+      "kind": "GAME JAM DEMO",
+      "description": "첫 세대의 경험을 담는 짧은 웹 데모를 준비합니다.",
+      "status": "coming-soon",
+      "accent": "stone",
+      "demoUrl": null
+    }
+  ]
+}

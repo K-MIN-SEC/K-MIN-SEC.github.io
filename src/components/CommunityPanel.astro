@@ -1,0 +1,118 @@
+---
+import AuthGate from './AuthGate.astro';
+interface Props { projectId: string; projectTitle: string; }
+const { projectId, projectTitle } = Astro.props;
+---
+<section class="community-panel" data-community-panel data-project-id={projectId} aria-labelledby={`community-${projectId}`}>
+  <div class="section-heading community-heading">
+    <div><span class="eyebrow">COMMUNITY</span><h2 id={`community-${projectId}`}>{projectTitle}에 반응 남기기</h2></div>
+    <button class="like-button" type="button" data-like disabled aria-pressed="false"><span aria-hidden="true">♡</span> 좋아요 <strong data-like-count>—</strong></button>
+  </div>
+  <p class="community-status" data-status role="status">커뮤니티를 불러오는 중입니다.</p>
+  <AuthGate><form class="comment-form" data-comment-form>
+    <label>닉네임<input name="display_name" maxlength="24" autocomplete="nickname" required /></label>
+    <label>댓글<textarea name="body" minlength="2" maxlength="800" rows="4" required placeholder="프로젝트에 대한 생각이나 질문을 남겨주세요."></textarea></label>
+    <div class="form-actions"><small>2–800자 · 누구나 볼 수 있습니다.</small><button class="button primary" type="submit">댓글 남기기</button></div>
+  </form></AuthGate>
+  <div class="comments" data-comments aria-live="polite"></div>
+  <dialog class="report-dialog" data-report-dialog>
+    <form method="dialog" data-report-form>
+      <h3>댓글 신고</h3><p>관리자가 내용을 확인할 수 있도록 이유를 알려주세요.</p>
+      <label>신고 이유<select name="reason" required><option value="spam">스팸 또는 광고</option><option value="harassment">괴롭힘 또는 혐오 표현</option><option value="unsafe">개인정보 또는 위험한 내용</option><option value="other">기타 부적절한 내용</option></select></label>
+      <input type="hidden" name="target_id" />
+      <div class="form-actions"><button class="button secondary" value="cancel">취소</button><button class="button primary" value="submit">신고하기</button></div>
+    </form>
+  </dialog>
+</section>
+
+<script>
+  import { communityEnabled, ensureCommunityUser, messageOf, supabase } from '../lib/supabase';
+  import { contentActions } from '../lib/content-actions';
+
+  const escapeText = (value: unknown) => String(value ?? '');
+  document.querySelectorAll<HTMLElement>('[data-community-panel]').forEach((panel) => {
+    if (panel.dataset.ready) return;
+    panel.dataset.ready = 'true';
+    const projectId = panel.dataset.projectId!;
+    const status = panel.querySelector<HTMLElement>('[data-status]')!;
+    const likeButton = panel.querySelector<HTMLButtonElement>('[data-like]')!;
+    const likeCount = panel.querySelector<HTMLElement>('[data-like-count]')!;
+    const form = panel.querySelector<HTMLFormElement>('[data-comment-form]')!;
+    const comments = panel.querySelector<HTMLElement>('[data-comments]')!;
+    const dialog = panel.querySelector<HTMLDialogElement>('[data-report-dialog]')!;
+    const reportForm = panel.querySelector<HTMLFormElement>('[data-report-form]')!;
+
+    if (!communityEnabled || !supabase) {
+      status.textContent = '커뮤니티 연결을 준비하고 있습니다.';
+      return;
+    }
+    form.hidden = false;
+    likeButton.disabled = false;
+
+    async function load() {
+      status.textContent = '댓글을 불러오는 중입니다.';
+      const [{ count }, commentResult, sessionResult] = await Promise.all([
+        supabase!.from('project_likes').select('*', { count: 'exact', head: true }).eq('project_id', projectId),
+        supabase!.from('project_comments').select('id,user_id,display_name,body,created_at').eq('project_id', projectId).eq('status', 'visible').order('created_at', { ascending: false }).limit(50),
+        supabase!.auth.getSession(),
+      ]);
+      likeCount.textContent = String(count ?? 0);
+      const userId = sessionResult.data.session?.user.id;
+      if (userId) {
+        const { data } = await supabase!.from('project_likes').select('project_id').eq('project_id', projectId).eq('user_id', userId).maybeSingle();
+        likeButton.setAttribute('aria-pressed', String(Boolean(data)));
+        likeButton.querySelector('span')!.textContent = data ? '♥' : '♡';
+      }
+      comments.replaceChildren();
+      for (const comment of commentResult.data ?? []) {
+        const article = document.createElement('article'); article.className = 'comment';
+        const head = document.createElement('div'); head.className = 'comment-head';
+        const author = document.createElement('strong'); author.textContent = escapeText(comment.display_name);
+        const time = document.createElement('time'); time.dateTime = comment.created_at; time.textContent = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).format(new Date(comment.created_at));
+        const report = document.createElement('button'); report.type = 'button'; report.className = 'report-button'; report.textContent = '신고'; report.addEventListener('click', () => { (reportForm.elements.namedItem('target_id') as HTMLInputElement).value = comment.id; dialog.showModal(); });
+        head.append(author, time, report);
+        const body = document.createElement('p'); body.textContent = escapeText(comment.body);
+        article.append(head, body); comments.append(article);
+        if (comment.user_id === userId) article.append(contentActions(comment, 'project_comment', load, status));
+      }
+      status.textContent = commentResult.error ? '댓글을 불러오지 못했습니다.' : (commentResult.data?.length ? '' : '첫 댓글을 남겨보세요.');
+    }
+
+    likeButton.addEventListener('click', async () => {
+      likeButton.disabled = true;
+      try {
+        const user = await ensureCommunityUser();
+        const active = likeButton.getAttribute('aria-pressed') === 'true';
+        const query = active
+          ? supabase!.from('project_likes').delete().eq('project_id', projectId).eq('user_id', user.id)
+          : supabase!.from('project_likes').insert({ project_id: projectId, user_id: user.id });
+        const { error } = await query; if (error) throw error;
+        await load();
+      } catch (error) { status.textContent = messageOf(error); }
+      likeButton.disabled = false;
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]')!; submit.disabled = true;
+      try {
+        const data = new FormData(form); const user = await ensureCommunityUser();
+        const { error } = await supabase!.from('project_comments').insert({ project_id: projectId, user_id: user.id, display_name: String(data.get('display_name')).trim(), body: String(data.get('body')).trim() });
+        if (error) throw error; form.reset(); await load(); status.textContent = '댓글을 남겼습니다.';
+      } catch (error) { status.textContent = messageOf(error); }
+      submit.disabled = false;
+    });
+
+    reportForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const submitter = (event as SubmitEvent).submitter as HTMLButtonElement | null;
+      if (submitter?.value !== 'submit') { dialog.close(); return; }
+      try {
+        const data = new FormData(reportForm); const user = await ensureCommunityUser();
+        const { error } = await supabase!.from('reports').insert({ user_id: user.id, target_type: 'project_comment', target_id: data.get('target_id'), reason: data.get('reason') });
+        if (error) throw error; dialog.close(); status.textContent = '신고가 접수되었습니다.';
+      } catch (error) { status.textContent = messageOf(error); }
+    });
+    load().catch((error) => { status.textContent = messageOf(error); });
+  });
+</script>

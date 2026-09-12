@@ -1,0 +1,22 @@
+---
+import Base from '../../layouts/Base.astro';
+import LogList from '../../components/LogList.astro';
+import { projects, playItems } from '../../lib/content';
+import type { Project } from '../../lib/content';
+import { url } from '../../lib/urls';
+import { getCollection } from 'astro:content';
+import CommunityPanel from '../../components/CommunityPanel.astro';
+export function getStaticPaths() { return projects.map((project) => ({ params: { id: project.id }, props: { project } })); }
+interface Props { project: Project; }
+const { project: p } = Astro.props;
+const posts = (await getCollection('devlog', ({ data }) => !data.draft && data.projectId === p.id)).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const hasDemoEntry = playItems.some((entry) => entry.projectId === p.id);
+const mediaSrc = (src: string) => src.startsWith('/') ? url(src) : src;
+---
+<Base title={p.title} description={p.description} schema={{ '@type': 'CreativeWork', name: p.title, description: p.description, creator: { '@type': 'Person', name: 'MINSEC' }, url: new URL(url(`projects/${p.id}/`), Astro.site).href, keywords: p.tags.join(', ') }}>
+  <header class:list={['page-header', `accent-${p.accent}`]}><a class="text-link" href={url('projects/')}>← Projects</a><h1>{p.title}</h1>{p.internalName && <span class="eyebrow">INTERNAL PROJECT NAME / {p.internalName}</span>}<p>{p.description}</p><div class="article-meta"><span class="status">{p.status}</span><span>{p.category}</span></div><ul class="tags" aria-label="주제">{p.tags.map((tag) => <li>{tag}</li>)}</ul></header>
+  <div class="article-layout"><aside class="article-side" aria-label="프로젝트 목차">{p.sections.map((section, i) => <a href={`#section-${i}`}>{section.title}</a>)}{hasDemoEntry && <a class="text-link" href={url('play/')}>Playable Lab ↗</a>}</aside><article class="prose">{p.sections.map((section, i) => <section><h2 id={`section-${i}`}>{section.title}</h2><p>{section.body}</p></section>)}</article></div>
+  {(p.coverImage || p.videos.length > 0) && <section class="project-media" aria-labelledby="media-title"><div class="section-heading"><div><span class="eyebrow">MEDIA</span><h2 id="media-title">이미지와 플레이 영상</h2></div></div>{p.coverImage && <figure class="project-hero-image"><img src={mediaSrc(p.coverImage)} alt={p.coverAlt ?? ''} width="1440" height="810" loading="lazy" /></figure>}<div class="video-grid">{p.videos.map((video) => <figure class="video-card">{video.type === 'youtube' ? <iframe src={video.src} title={video.title} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe> : <video controls preload="metadata" poster={video.poster ? mediaSrc(video.poster) : undefined}><source src={mediaSrc(video.src)} /></video>}<figcaption><strong>{video.title}</strong>{video.caption && <span>{video.caption}</span>}</figcaption></figure>)}</div></section>}
+  {posts.length > 0 && <section class="section-block"><div class="section-heading"><h2>이 프로젝트의 기록</h2></div><LogList posts={posts} /></section>}
+  <CommunityPanel projectId={p.id} projectTitle={p.title} />
+</Base>

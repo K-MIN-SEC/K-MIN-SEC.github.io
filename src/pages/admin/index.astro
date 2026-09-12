@@ -1,0 +1,10 @@
+---
+import Base from '../../layouts/Base.astro';
+import AdminPanel from '../../components/AdminPanel.astro';
+import { url } from '../../lib/urls';
+---
+<Base title="Admin · 사이트 관리" description="MINSEC 콘텐츠와 커뮤니티 관리 화면입니다." noindex>
+  <header class="page-header"><span class="eyebrow">PRIVATE WORKSPACE</span><h1>Admin<span class="brand-period">.</span></h1><p>사이트 콘텐츠를 편집하고, Space의 글과 댓글을 관리합니다.</p></header>
+  <section class="admin-content-entry" aria-labelledby="content-title"><div><h2 id="content-title">사이트 콘텐츠 편집</h2><p>프로젝트 · Play 카드 · 대표이미지 · 영상 · Devlog · 내 프로필</p></div><a class="button primary" href={url('admin/content/')}>콘텐츠 편집기 열기 →</a></section>
+  <AdminPanel />
+</Base>

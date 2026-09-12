@@ -1,0 +1,23 @@
+name: Build and verify
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        base: ['/', '/minsec-site/']
+    env:
+      SITE_URL: https://minsec-test.invalid
+      BASE_PATH: ${{ matrix.base }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run verify
+      - run: node scripts/test-community.mjs
