@@ -159,6 +159,8 @@ GitHub Pages 배포를 원하면:
 
 확정된 서비스 경계, 권한, 보안 원칙과 A–E 작업 순서는 [`docs/architecture-decisions.md`](docs/architecture-decisions.md)에 기록합니다. 비밀글·첨부파일·공지는 `PUBLIC_SPACE_EXTENDED=true`와 migration 0004가 모두 준비된 뒤에만 활성화합니다. 기본값은 기존 공개 Space와 호환되는 모드입니다. 적용·복구 절차는 [`docs/space-0004-rollout.md`](docs/space-0004-rollout.md), 공통 반응 이전안은 [`docs/content-target-registry-migration.md`](docs/content-target-registry-migration.md), Creator Space 분리안은 [`docs/creator-space-separation.md`](docs/creator-space-separation.md)를 확인하세요.
 
+현재 단계별 완료·대기 항목은 [`docs/phase-status.md`](docs/phase-status.md), OAuth 설정에 필요한 정확한 주소와 QA 기준은 [`docs/oauth-setup.md`](docs/oauth-setup.md)에 정리했습니다.
+
 ## 분석 확장 구조
 
 `src/lib/events.ts`에는 `minsec:event` 브라우저 이벤트와 Analytics adapter 자리가 있습니다. 기본 상태에서는 저장·집계·외부 전송을 하지 않습니다. `page_view`, `project_open`, `devlog_open`, `demo_open`, 화면이 실제 보였던 시간의 `engagement`를 발생시킵니다. `durationMs`는 구간별 증분이므로 여러 engagement 이벤트를 합산하세요. `demo_open`은 링크 클릭이며 게임 실행 완료를 뜻하지 않습니다. `demo_start`, `demo_complete`는 향후 게임 로더와 종료 콜백에서 `track()`으로 연결합니다.
