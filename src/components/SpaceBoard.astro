@@ -1,5 +1,6 @@
 ---
 import AuthGate from './AuthGate.astro';
+const extended = import.meta.env.PUBLIC_SPACE_EXTENDED === 'true';
 ---
 <section class="space-board" data-space-board aria-labelledby="space-board-title">
   <div class="section-heading"><h2 id="space-board-title">Space 게시판</h2><a class="button primary" href="#write">+ 글쓰기</a></div>
@@ -9,9 +10,8 @@ import AuthGate from './AuthGate.astro';
       <div class="form-row"><label>닉네임<input name="display_name" maxlength="24" autocomplete="nickname" required /></label><label>제목<input name="title" minlength="2" maxlength="80" required /></label></div>
       <label>내용<textarea name="body" minlength="2" maxlength="2000" rows="5" required></textarea></label>
       <label>작업 링크 <small>(선택)</small><input name="link_url" type="url" maxlength="500" placeholder="https://" /></label>
-      <label>게시글 비밀번호 <small>(선택 · 비워두면 공개글)</small><input name="password" type="password" minlength="8" maxlength="72" autocomplete="off" /><small>계정 비밀번호와 별개입니다. 8자 이상으로 정해 공유할 사람에게 전달해 주세요.</small></label>
-      <label>첨부파일 <small>(이미지·PDF·TXT·ZIP, 각 10MB 이하 · 최대 5개)</small><input name="files" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.txt,.zip" /></label>
-      <div class="form-actions"><small>공지 등록은 관리자가 게시 후 설정할 수 있습니다.</small><button class="button primary" type="submit">게시하기</button></div>
+      {extended && <><label>게시글 비밀번호 <small>(선택 · 비워두면 공개글)</small><input name="password" type="password" minlength="8" maxlength="72" autocomplete="off" /><small>계정 비밀번호와 별개입니다. 8자 이상으로 정해 공유할 사람에게 전달해 주세요.</small></label><label>첨부파일 <small>(이미지·PDF·TXT·ZIP, 각 10MB 이하 · 최대 5개)</small><input name="files" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.txt,.zip" /></label></>}
+      <div class="form-actions"><small>{extended ? '공지 등록은 관리자가 게시 후 설정할 수 있습니다.' : '가입한 회원은 누구나 작성할 수 있습니다.'}</small><button class="button primary" type="submit">게시하기</button></div>
     </form></AuthGate>
   </div>
   <p class="community-status" data-space-status role="status">Space를 불러오는 중입니다.</p>

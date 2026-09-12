@@ -1,5 +1,5 @@
 import { supabase, messageOf } from './supabase';
-import { removeFile } from './space-files';
+import { removeFile, spaceExtendedEnabled } from './space-files';
 export type ContentType = 'space_post' | 'space_comment' | 'project_comment';
 export const contentTables = { space_post: 'space_posts', space_comment: 'space_comments', project_comment: 'project_comments' } as const;
 export type CommunityContent = { id: string; display_name: string; body: string; title?: string; link_url?: string | null; status?: string; is_secret?: boolean; is_notice?: boolean };
@@ -41,7 +41,7 @@ export function contentActions(item: CommunityContent, type: ContentType, reload
     if (!window.confirm('이 내용을 삭제할까요? 삭제 후에는 되돌릴 수 없습니다.')) return;
     remove.disabled = true;
     try {
-      if (type === 'space_post') {
+      if (type === 'space_post' && spaceExtendedEnabled) {
         const files = await supabase!.from('space_attachments').select('object_path').eq('post_id', item.id);
         if (files.error) throw files.error;
         for (const file of files.data) await removeFile(file.object_path);
@@ -50,7 +50,7 @@ export function contentActions(item: CommunityContent, type: ContentType, reload
     catch (error) { status.textContent = messageOf(error); } finally { remove.disabled = false; }
   });
   actions.append(edit, remove);
-  if (type === 'space_post') {
+  if (type === 'space_post' && spaceExtendedEnabled) {
     const privacy = document.createElement('button'); privacy.type = 'button'; privacy.className = 'text-link'; privacy.textContent = item.is_secret ? '게시글 비밀번호 변경 / 공개 전환' : '비밀글로 전환';
     privacy.onclick = () => {
       const dialog = document.createElement('dialog'); dialog.className = 'report-dialog';

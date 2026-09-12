@@ -147,15 +147,17 @@ GitHub Pages 배포를 원하면:
 4. 사이트의 Account에서 이메일 로그인을 마친 뒤 Supabase의 Authentication → Users에서 본인 UUID와 이메일 인증 여부를 확인하고 SQL Editor에서 `insert into public.admins(user_id) values ('본인-UUID') on conflict do nothing;`를 한 번 실행합니다. 소유자 첫 로그인은 완료했으며 관리자 등록 작업은 최종 동작 확인이 남아 있습니다.
 5. GitHub 저장소 Settings → Secrets and variables → Actions에 같은 두 값을 secret으로 추가하고 사이트를 다시 배포합니다. 현재 GitHub 배포에는 아직 연결값을 등록하지 않았습니다.
 
-현재 Auth Site URL은 `http://127.0.0.1:4321/account/`이며 허용 복귀 주소는 이 주소와 `http://localhost:4321/account/`입니다. 공개 배포 시 Site URL과 Redirect URLs에 실제 공개 Account 주소를 설정해야 합니다.
+현재 Auth Site URL은 `http://127.0.0.1:4321/account/`이며 허용 복귀 주소는 이 주소와 `http://localhost:4321/account/`입니다. 공개 배포 시 Site URL과 Redirect URLs에 실제 공개 Account 주소를 설정해야 합니다. 일반 회원 로그인 UI는 Google/GitHub OAuth를 우선합니다. 각 공급자 앱의 Client ID/Secret을 Supabase Dashboard에 설정하기 전에는 버튼이 동작하지 않습니다. 운영자용 기존 이메일 매직링크 폼은 `PUBLIC_EMAIL_LOGIN=true`일 때만 표시합니다. 이메일+비밀번호 가입은 제공하지 않습니다.
 
 기본 이메일 발송 서비스는 Supabase 조직의 팀원 주소에만 메일을 보내며, 현재 시간당 2건으로 제한됩니다. 일반 방문자의 이메일 가입/로그인을 공개하려면 Custom SMTP를 구성하거나 별도로 OAuth 로그인 제공자를 연결해야 합니다. 이메일 확인을 끄는 방식으로 우회하지 않습니다. [Supabase SMTP 안내](https://supabase.com/docs/guides/auth/auth-smtp)
 
-읽기는 비회원에게 허용하고, 작성·좋아요·신고에는 이메일 로그인이 필요합니다. 작성자는 본인 글·댓글을 수정/삭제할 수 있고, 관리자는 모든 게시글·댓글 수정/삭제/숨김/재공개와 신고 기각/숨김 처리를 할 수 있습니다. 관리자 여부와 소유권은 Row Level Security와 서버 함수에서 검사합니다. `node scripts/test-community.mjs`로 별도 로컬 PostgreSQL 엔진에서 권한과 수정·신고 흐름을 검증할 수 있습니다. 이 검사는 실제 Supabase Auth나 이메일 발송 시험을 대신하지 않습니다. 차단·스팸 자동화·관리자 메일 알림은 아직 포함하지 않았습니다.
+읽기는 비회원에게 허용하고, 작성·좋아요·신고에는 Member 로그인이 필요합니다. 작성자는 본인 글·댓글을 수정/삭제할 수 있고, 관리자는 모든 게시글·댓글 수정/삭제/숨김/재공개와 신고 기각/숨김 처리를 할 수 있습니다. 관리자 여부와 소유권은 Row Level Security와 서버 함수에서 검사합니다. `node scripts/test-community.mjs`로 별도 로컬 PostgreSQL 엔진에서 권한과 수정·신고 흐름을 검증할 수 있습니다. 이 검사는 실제 Supabase Auth 시험을 대신하지 않습니다. Creator 승인, 차단·스팸 자동화·관리자 메일 알림은 아직 포함하지 않았습니다.
 
 2026-09-13 설치 시 Decap 3.16.2와 로컬 서버의 의존성 감사에서 31건(높음 7, 보통 22, 낮음 2)이 보고되었습니다. 호환 가능한 자동 수정으로 해소되지 않았습니다. 편집기 Markdown 처리 등의 하위 의존성에 해당하며, `devDependencies`라고 해서 브라우저에 복사되는 CMS 코드까지 안전하다는 뜻은 아닙니다. 현재 공개 OAuth 편집은 연결하지 않았고, 실제 공개 운영 전 이 의존성의 업데이트/영향 범위를 재검토해야 합니다.
 
-사이트의 이름·학교·연락처는 `src/data/site.json`에서 관리합니다. 현재 이메일, 전화번호, 생년월일이 공개 화면과 저장소 소스에 포함됩니다.
+사이트의 이름·학교·연락처는 `src/data/site.json`에서 관리합니다. 현재 공개 저장소에는 이름, 학교와 연락용 이메일만 포함하며 전화번호와 생년월일은 제외했습니다.
+
+확정된 서비스 경계, 권한, 보안 원칙과 A–E 작업 순서는 [`docs/architecture-decisions.md`](docs/architecture-decisions.md)에 기록합니다. 비밀글·첨부파일·공지는 `PUBLIC_SPACE_EXTENDED=true`와 migration 0004가 모두 준비된 뒤에만 활성화합니다. 기본값은 기존 공개 Space와 호환되는 모드입니다.
 
 ## 분석 확장 구조
 

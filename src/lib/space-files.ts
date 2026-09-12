@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+export const spaceExtendedEnabled = import.meta.env.PUBLIC_SPACE_EXTENDED === 'true';
 const types = ['image/jpeg','image/png','image/webp','image/gif','application/pdf','text/plain','application/zip','application/x-zip-compressed'];
 export function validateFiles(files: File[]) {
   if (files.length > 5) throw new Error('첨부파일은 최대 5개입니다.');
