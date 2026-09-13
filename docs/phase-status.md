@@ -7,12 +7,13 @@
 - 변경: Google/GitHub OAuth 우선 Account UI, 운영자 매직링크 opt-in, CMS/Supabase Admin 경계 안내, 개인 사이트 메뉴에서 Space 분리, Space QA 경로 noindex.
 - 구현: Projects/Play 데이터 관리, Markdown Devlog, 프로젝트 반응, Account, Admin, CMS, SEO, 확장 기능 feature flag.
 - 완료: GitHub Pages 자동 배포, Supabase 공개 키 연결, 공개 Auth URL/Redirect URL 설정.
-- 완료: GitHub OAuth 앱 발급, Supabase 공급자 연결, 공개 사이트에서 GitHub 승인 화면 진입 확인.
-- 미완료: Google OAuth 공급자 앱 발급·연결, Analytics 공급자 연결.
+- 완료: GitHub OAuth 앱 발급, Supabase 공급자 연결, 공개 사이트 로그인 확인.
+- 완료: Google OAuth 앱·웹 클라이언트 발급, Supabase 공급자 연결.
+- 미완료: Google OAuth 외부 사용자 공개 전환 및 별도 Member 계정 로그인 QA, Analytics 공급자 연결.
 - Migration: 없음.
 - 환경값: `PUBLIC_EMAIL_LOGIN=false`. 숨겨진 QA 경로에서 `PUBLIC_SPACE_EXTENDED=true`로 실제 검증한다.
 - QA: 기본/확장 모드 Astro build와 정적 페이지 검증 통과.
-- rollback: 커밋 `e039d3e`를 되돌리거나 두 feature flag를 false로 유지.
+- rollback: OAuth 문제가 있으면 `PUBLIC_GOOGLE_LOGIN=false`로 되돌려 Google 버튼을 숨긴다. Supabase 공급자 비활성화는 인증 장애가 확인될 때만 별도로 수행한다.
 
 ## B. 현재 Supabase / Space 실제 QA
 
@@ -49,8 +50,7 @@
 
 ## 남은 순서
 
-1. GitHub 계정의 최초 승인과 callback을 확인하고 로그인 Member QA를 수행한다.
-2. Google OAuth 앱을 생성하고 Supabase에 연결한다.
-3. 공개글과 비밀글·첨부파일의 실제 브라우저 QA를 수행한다.
-4. 개인 사이트에서는 Space QA 경로를 계속 숨기고, Creator Space 별도 서비스에서만 확장 UI를 공개한다.
-5. Creator Space 배포 전 해당 서비스 환경에 `PUBLIC_SPACE_EXTENDED=true`를 설정한다.
+1. Google OAuth 앱을 외부 사용자용으로 공개 전환하고 공개 사이트 로그인 callback을 확인한다.
+2. 별도 Member 계정으로 비밀글 비밀번호 해제 QA를 수행한다.
+3. 개인 사이트에서는 Space QA 경로를 계속 숨기고, Creator Space 별도 서비스에서만 확장 UI를 공개한다.
+4. Creator Space 배포 전 해당 서비스 환경에 `PUBLIC_SPACE_EXTENDED=true`를 설정한다.
