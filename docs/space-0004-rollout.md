@@ -1,6 +1,6 @@
 # Space 0004 적용·복구 절차
 
-상태: 로컬 PostgreSQL 호환 엔진 검증 완료, **실제 Supabase에는 아직 미적용**
+상태: 2026-09-13 실제 Supabase 적용 완료. 공개 0004 컬럼/RPC와 익명 권한 검증 통과, 로그인 Member·Storage 왕복 QA 대기.
 
 ## 영향
 
