@@ -26,8 +26,10 @@
 
 - 변경: 비밀글을 공개 feed에서 제외, 직접 링크 잠금 요약, bcrypt 해시, 1시간 열람권한, 실패 제한, 비밀번호 변경 시 권한 폐기, private Storage, 파일 정리 trigger, 공개글 공지.
 - 로컬 QA: migrations 0001–0004 순차 적용, 기존 공개 글 호환, RLS/RPC와 파일 접근 검증 통과.
-- 실제 적용: `supabase/migrations/0004_private_posts_files_notices.sql` 적용 완료. 공개 0004 컬럼/RPC 조회, Admin 목록 비공개, 익명 쓰기·신고 거부 확인.
-- 미완료: 로그인 Member의 실제 비밀글·댓글·좋아요와 Storage 업로드 왕복 QA.
+- 실제 적용: `0004_private_posts_files_notices.sql` 적용 완료. 공개 0004 컬럼/RPC 조회, Admin 목록 비공개, 익명 쓰기·신고 거부 확인.
+- 실제 QA: GitHub 로그인, 글·댓글 작성/수정/삭제, 좋아요, 신고·기각, 공지, 비밀글 전환, 비회원 본문·댓글·첨부 차단, 관리자 비밀번호 없는 열람, private Storage 업로드·삭제와 게시글 cascade 정리 확인.
+- 발견/수정: Supabase가 금지하는 `storage.objects` 직접 삭제 trigger를 `0005_storage_api_cleanup.sql`로 제거하고 Storage API 순서로 정리. 실제 프로젝트 적용과 첨부 글 삭제 재검증 완료.
+- 미완료: 다른 Member 계정의 비밀글 비밀번호 해제 QA.
 - 환경값: 공개 메뉴에 노출되지 않는 `/space/` QA 경로에 `PUBLIC_SPACE_EXTENDED=true` 적용.
 - rollback: `docs/space-0004-rollout.md` 참고. 비밀 데이터 생성 후 공개 RLS로 역행 금지.
 

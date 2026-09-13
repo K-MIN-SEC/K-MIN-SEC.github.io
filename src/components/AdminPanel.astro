@@ -67,7 +67,8 @@ import { url } from '../lib/urls';
       if (result.error) throw result.error; total = result.count ?? 0;
       for (const item of result.data) {
         const card = el('article', ''); card.className = 'report-card';
-        card.append(el('h3', item.title || item.display_name), el('p', `${item.display_name} · ${item.status === 'hidden' ? '숨김' : '공개'} · ${new Date(item.created_at).toLocaleString('ko-KR')}`), el('p', item.body), contentActions(item, contentType, load, status, true)); list.append(card);
+        const visibility = item.status === 'hidden' ? '숨김' : contentType === 'space_post' && item.is_secret ? '비밀글' : '공개';
+        card.append(el('h3', item.title || item.display_name), el('p', `${item.display_name} · ${visibility} · ${new Date(item.created_at).toLocaleString('ko-KR')}`), el('p', item.body), contentActions(item, contentType, load, status, true)); list.append(card);
       }
     }
     dashboard.disabled = false;

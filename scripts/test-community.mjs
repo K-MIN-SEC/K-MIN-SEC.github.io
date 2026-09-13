@@ -58,6 +58,8 @@ try {
   // Apply the additive migration after a legacy public post exists.
   await db.exec('reset role');
   await db.exec(readFileSync('supabase/migrations/0004_private_posts_files_notices.sql', 'utf8'));
+  await db.exec(readFileSync('supabase/migrations/0005_storage_api_cleanup.sql', 'utf8'));
+  assert.equal((await db.query("select count(*)::int count from pg_trigger where tgname='delete_space_object_after_metadata'")).rows[0].count, 0);
   await asUser(null); assert.equal((await db.query('select id from space_posts where id=$1',[post])).rows.length,1);
 
   // Secret posts stay out of the public feed. A direct shared id reveals only a locked summary.
@@ -86,6 +88,9 @@ try {
   await assert.rejects(db.query('select public.set_space_notice($1,true)',[secret]), /비밀글은 공지/);
   await db.query('select public.set_space_password($1,null)',[secret]); await db.query('select public.set_space_notice($1,true)',[secret]);
   assert.equal((await db.query('select is_notice from space_posts where id=$1',[secret])).rows[0].is_notice,true);
+  // The browser removes the object through the Storage API, then removes metadata before deleting the post.
+  await db.query('delete from storage.objects where name=$1',[objectPath]);
+  await db.query('select public.remove_space_attachment($1)',[objectPath]);
   await db.query('delete from space_posts where id=$1',[secret]);
   assert.equal((await db.query('select name from storage.objects where name=$1',[objectPath])).rows.length,0);
   await asUser(other);
@@ -96,5 +101,5 @@ try {
   assert.equal((await db.query('select status from reports where id=$1', [report])).rows[0].status, 'resolved');
   await db.query('delete from space_posts where id=$1', [post]);
   assert.equal((await db.query('select id from space_comments where id=$1', [reply])).rows.length, 0);
-  console.log('Passed: migrations 0001–0004, account permissions, moderation, secret post isolation/unlock/rotation, notices, private file RLS and cleanup.');
+  console.log('Passed: migrations 0001–0005, account permissions, moderation, secret post isolation/unlock/rotation, notices, private file RLS and Storage API cleanup.');
 } finally { await db.close(); }

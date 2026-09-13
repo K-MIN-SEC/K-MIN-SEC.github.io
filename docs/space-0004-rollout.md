@@ -1,10 +1,12 @@
-# Space 0004 적용·복구 절차
+# Space 0004–0005 적용·복구 절차
 
 상태: 2026-09-13 실제 Supabase 적용 완료. 공개 0004 컬럼/RPC와 익명 권한 검증 통과, 로그인 Member·Storage 왕복 QA 대기.
 
 ## 영향
 
 `0004_private_posts_files_notices.sql`은 기존 `space_posts`에 `is_secret`, `is_notice`를 기본 `false`로 추가한다. 기존 공개 글의 내용은 바꾸지 않는다. Space 글 생성은 직접 INSERT에서 보안 RPC로 전환하고, 게시글·댓글·좋아요 조회 RLS를 교체한다. 비밀번호 해시와 임시 열람권한은 API에 노출되지 않는 `private` 스키마에 저장한다. 첨부파일용 `space-files` bucket은 항상 private이다.
+
+`0005_storage_api_cleanup.sql`은 Supabase가 금지하는 `storage.objects` 직접 삭제 trigger를 제거한다. 파일 삭제는 브라우저의 Storage API가 먼저 처리하고, 성공한 뒤 첨부 메타데이터와 글을 삭제한다. 테이블이나 기존 데이터는 변경하지 않는다.
 
 ## 적용 전 확인
 
