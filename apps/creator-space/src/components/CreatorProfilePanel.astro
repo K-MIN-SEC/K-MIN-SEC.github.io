@@ -1,19 +1,28 @@
+---
+import TagPicker from './TagPicker.astro';
+const {section='profile'}=Astro.props;
+const interests=['게임 기획','게임 개발','2D 아트','3D 아트','UI/UX','생성형 AI','액션','퍼즐','RPG','스토리텔링','사운드','게임잼'];
+const tools=[['Unity','유니티 (Unity)'],['Unreal Engine','언리얼 엔진'],['Godot','고도'],['Blender','블렌더'],['Figma','피그마'],['Photoshop','포토샵'],['GitHub','깃허브'],['Python','파이썬'],['ChatGPT','챗GPT'],['ComfyUI','컴피UI']];
+---
 <section class="creator-profile-panel" data-creator-profile aria-labelledby="creator-profile-title">
-  <div class="section-heading"><div><span class="eyebrow">CREATOR SPACE PROFILE</span><h2 id="creator-profile-title">내 크리에이터 프로필</h2></div><span class="status" data-creator-badge>MEMBER</span></div>
+  <div class="section-heading"><div><span class="eyebrow">CREATOR SPACE PROFILE</span><h2 id="creator-profile-title">{section==='profile'?'기본 프로필':section==='contacts'?'공개할 연락처':'Creator 권한'}</h2></div><span class="status" data-creator-badge>MEMBER</span></div>
   <p class="notice" data-creator-status role="status">프로필 상태를 확인하는 중입니다.</p>
   <fieldset class="community-fields" data-creator-fields disabled>
-    <form class="profile-editor" data-profile-form>
-      <div class="form-row"><label>핸들<input name="handle" required minlength="3" maxlength="30" pattern="[a-z0-9][a-z0-9_-]{2,29}" placeholder="minsec" /></label><label>표시 이름<input name="display_name" required maxlength="50" /></label></div>
+    <form class="profile-editor" data-profile-form hidden={section!=='profile'}>
+      <div class="form-row"><label>프로필 주소 ID<input name="handle" required minlength="3" maxlength="30" pattern="[a-z0-9][a-z0-9_-]{2,29}" placeholder="minsec" /><small>프로필 주소에 사용합니다. 영문 소문자·숫자·밑줄·하이픈, 3~30자</small></label><label>표시 이름<input name="display_name" required maxlength="50" /></label></div>
       <label>소개<textarea name="bio" rows="4" maxlength="1000" placeholder="어떤 작업을 만드는지 소개해 주세요."></textarea></label>
       <div class="form-row"><label>학교<input name="school_name" maxlength="100" /></label><label>학과<input name="department_name" maxlength="100" /></label></div>
       <div class="profile-year-row"><label>입학년도<input name="admission_year" type="number" min="2000" max="2100" /></label><label>졸업예정년도<input name="expected_graduation_year" type="number" min="2000" max="2100" /></label><label>실제 졸업년도<input name="graduation_year" type="number" min="2000" max="2100" /></label></div>
-      <label>주요 직군<input name="primary_role" maxlength="80" placeholder="Game Designer" /></label>
-      <div class="form-row"><label>관심 분야 <small>쉼표로 구분</small><input name="interests" placeholder="Action, Puzzle, AI" /></label><label>도구 <small>쉼표로 구분</small><input name="tools" placeholder="Unity, Figma" /></label></div>
+      <label>주요 직군<input name="primary_role" maxlength="80" placeholder="예: 게임 기획" list="role-suggestions" /></label>
+      <datalist id="role-suggestions">{['게임 기획','클라이언트 개발','서버 개발','2D 아트','3D 아트','UI/UX 디자인','사운드','AI 개발'].map(role=><option value={role}/>)}</datalist>
+      <TagPicker name="interests" label="관심 분야" suggestions={interests}/>
+      <TagPicker name="tools" label="사용하는 도구" suggestions={tools}/>
+
       <div class="form-row"><label>참여 가능 상태<select name="availability"><option value="hidden">표시하지 않음</option><option value="available">참여 가능</option><option value="limited">조건부 가능</option><option value="unavailable">현재 참여 어려움</option></select></label><label>프로필 공개 범위<select name="visibility"><option value="members">회원에게 공개</option><option value="public">전체 공개</option><option value="private">비공개</option></select></label></div>
-      <button class="button primary" type="submit">프로필 저장</button>
+      <div class="save-bar"><span data-profile-save-state>변경 후 저장해 주세요.</span><a class="text-link" data-my-profile hidden>내 프로필 보기 ↗</a><button class="button primary" type="submit">프로필 저장</button></div>
     </form>
 
-    <section class="profile-subsection" aria-labelledby="contact-title">
+    <section class="profile-subsection" aria-labelledby="contact-title" hidden={section!=='contacts'}>
       <div><h3 id="contact-title">연락처</h3><p>로그인 계정 이메일과 별개입니다. 공개할 연락처만 직접 입력해 주세요.</p></div>
       <form class="contact-editor" data-contact-form>
         <label>종류<select name="contact_type"><option value="email">Email</option><option value="discord">Discord</option><option value="github">GitHub</option><option value="x">X</option><option value="website">개인 사이트</option></select></label>
@@ -24,7 +33,7 @@
       <div class="contact-list" data-contact-list><p>등록한 연락처가 없습니다.</p></div>
     </section>
 
-    <section class="profile-subsection" aria-labelledby="creator-request-title">
+    <section class="profile-subsection" aria-labelledby="creator-request-title" hidden={section!=='creator'}>
       <div><h3 id="creator-request-title">Creator 승인</h3><p>승인되면 Creator Space에서 Works, Projects, Team Up과 Event를 공개할 수 있습니다.</p></div>
       <form class="creator-request" data-creator-request-form>
         <label>신청 메모<textarea name="message" rows="3" maxlength="1000" placeholder="등록하려는 작업이나 프로젝트를 간단히 알려주세요."></textarea></label>
@@ -46,7 +55,7 @@
   const requestForm = root.querySelector<HTMLFormElement>('[data-creator-request-form]')!;
   const splitValues = (value: FormDataEntryValue | null) => String(value ?? '').split(',').map((item) => item.trim()).filter(Boolean).slice(0, 20);
   const year = (value: FormDataEntryValue | null) => value ? Number(value) : null;
-  const setValue = (name: string, value: unknown) => { const input = profileForm.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null; if (input) input.value = Array.isArray(value) ? value.join(', ') : String(value ?? ''); };
+  const setValue = (name: string, value: unknown) => { const input = profileForm.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null; if (input) { input.value = Array.isArray(value) ? value.join(', ') : String(value ?? ''); input.dispatchEvent(new Event('change')); } };
   async function loadContacts(userId: string) {
     const result = await supabase!.from('profile_contacts').select('contact_type,contact_value,visibility').eq('user_id',userId).order('contact_type');
     if (result.error) throw result.error;
@@ -54,9 +63,9 @@
     const labels: Record<string,string> = { email:'Email',discord:'Discord',github:'GitHub',x:'X',website:'개인 사이트' };
     for (const contact of result.data ?? []) {
       const row = document.createElement('article'); row.className='contact-item';
-      const text = document.createElement('div'); const strong=document.createElement('strong'); strong.textContent=labels[contact.contact_type] ?? contact.contact_type; const value=document.createElement('p'); value.textContent=`${contact.contact_value} · ${contact.visibility}`; text.append(strong,value);
+      const text = document.createElement('div'); const strong=document.createElement('strong'); strong.textContent=labels[contact.contact_type] ?? contact.contact_type; const value=document.createElement('p'); value.textContent=`${contact.contact_value} · ${({public:'전체 공개',members:'회원에게 공개',private:'비공개'} as Record<string,string>)[contact.visibility]||contact.visibility}`; text.append(strong,value);
       const remove=document.createElement('button'); remove.type='button'; remove.className='text-link'; remove.textContent='삭제';
-      remove.onclick=async()=>{ remove.disabled=true; try { const response=await supabase!.rpc('remove_profile_contact',{p_type:contact.contact_type}); if(response.error)throw response.error; await loadContacts(userId); } catch(error){status.textContent=messageOf(error); remove.disabled=false;} };
+      remove.onclick=async()=>{ remove.disabled=true; try { const response=await supabase!.rpc('remove_profile_contact',{p_type:contact.contact_type}); if(response.error)throw response.error; await loadContacts(userId); status.textContent='연락처를 삭제했습니다.'; } catch(error){status.textContent=messageOf(error); remove.disabled=false;} };
       row.append(text,remove); contactList.append(row);
     }
     if (!result.data?.length) { const empty=document.createElement('p'); empty.textContent='등록한 연락처가 없습니다.'; contactList.append(empty); }
@@ -64,7 +73,7 @@
   async function load() {
     if (!supabase) { status.textContent='Creator Space 연결 전입니다.'; return; }
     const session=await supabase.auth.getSession(); const user=session.data.session?.user;
-    if (!user || user.is_anonymous) { status.textContent='로그인하면 프로필을 만들 수 있습니다.'; return; }
+    if (!user || user.is_anonymous) { status.textContent='로그인하면 프로필을 만들 수 있습니다.';const a=document.createElement('a');a.href='/account/';a.textContent=' 로그인하기 →';status.append(a);return; }
     const profile=await supabase.from('member_profiles').select('*').eq('user_id',user.id).maybeSingle(); if(profile.error)throw profile.error;
     const fallback=String(user.user_metadata?.user_name ?? user.user_metadata?.preferred_username ?? user.email?.split('@')[0] ?? 'member').toLowerCase().replace(/[^a-z0-9_-]/g,'').slice(0,30);
     if(profile.data) for(const [name,value] of Object.entries(profile.data)) setValue(name,value);
@@ -73,9 +82,14 @@
     const approvalStatus=approval.data?.status;
     badge.textContent=approvalStatus==='approved'?'CREATOR':'MEMBER';
     status.textContent=approvalStatus==='approved'?'Creator로 승인되었습니다.':approvalStatus==='requested'?'Creator 승인 요청을 검토하고 있습니다.':approvalStatus==='rejected'?'Creator 요청이 반려되었습니다. 프로필을 보완한 뒤 다시 신청할 수 있습니다.':approvalStatus==='revoked'?'Creator 권한이 해제된 상태입니다.':'프로필을 저장한 뒤 Creator 승인을 요청할 수 있습니다.';
-    fields.disabled=false; await loadContacts(user.id);
+    fields.disabled=false; if(profile.data)showProfile(profile.data.handle); await loadContacts(user.id);
   }
-  profileForm.onsubmit=async(event)=>{event.preventDefault();const button=profileForm.querySelector<HTMLButtonElement>('[type=submit]')!;button.disabled=true;try{const data=new FormData(profileForm);const result=await supabase!.rpc('upsert_member_profile',{p_handle:data.get('handle'),p_display_name:data.get('display_name'),p_bio:data.get('bio'),p_school_name:data.get('school_name'),p_department_name:data.get('department_name'),p_admission_year:year(data.get('admission_year')),p_expected_graduation_year:year(data.get('expected_graduation_year')),p_graduation_year:year(data.get('graduation_year')),p_primary_role:data.get('primary_role'),p_interests:splitValues(data.get('interests')),p_tools:splitValues(data.get('tools')),p_availability:data.get('availability'),p_visibility:data.get('visibility')});if(result.error)throw result.error;status.textContent='프로필을 저장했습니다.';}catch(error){status.textContent=messageOf(error);}finally{button.disabled=false;}};
+  const saveState=root.querySelector<HTMLElement>('[data-profile-save-state]')!;
+  let dirty=false;
+  const showProfile=(handle:string)=>{const a=root.querySelector<HTMLAnchorElement>('[data-my-profile]')!;a.href='/members/'+encodeURIComponent(handle)+'/';a.hidden=false;};
+  profileForm.addEventListener('input',()=>{dirty=true;saveState.textContent='아직 저장하지 않은 변경사항이 있습니다.';saveState.dataset.dirty='true';});
+  window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
+  profileForm.onsubmit=async(event)=>{event.preventDefault();const button=profileForm.querySelector<HTMLButtonElement>('[type=submit]')!;button.disabled=true;try{const data=new FormData(profileForm);const result=await supabase!.rpc('upsert_member_profile',{p_handle:data.get('handle'),p_display_name:data.get('display_name'),p_bio:data.get('bio'),p_school_name:data.get('school_name'),p_department_name:data.get('department_name'),p_admission_year:year(data.get('admission_year')),p_expected_graduation_year:year(data.get('expected_graduation_year')),p_graduation_year:year(data.get('graduation_year')),p_primary_role:data.get('primary_role'),p_interests:splitValues(data.get('interests')),p_tools:splitValues(data.get('tools')),p_availability:data.get('availability'),p_visibility:data.get('visibility')});if(result.error)throw result.error;status.textContent='프로필을 저장했습니다.';dirty=false;root.querySelectorAll<HTMLElement>('[data-tag-status]').forEach(e=>e.textContent='');saveState.dataset.dirty='false';saveState.textContent='✓ 저장 완료 · '+new Date().toLocaleTimeString('ko-KR');showProfile(String(data.get('handle')));}catch(error){status.textContent=messageOf(error);}finally{button.disabled=false;}};
   contactForm.onsubmit=async(event)=>{event.preventDefault();const button=contactForm.querySelector<HTMLButtonElement>('[type=submit]')!;button.disabled=true;try{const data=new FormData(contactForm);const result=await supabase!.rpc('upsert_profile_contact',{p_type:data.get('contact_type'),p_value:data.get('contact_value'),p_visibility:data.get('visibility')});if(result.error)throw result.error;const session=await supabase!.auth.getSession();contactForm.reset();await loadContacts(session.data.session!.user.id);status.textContent='연락처를 저장했습니다.';}catch(error){status.textContent=messageOf(error);}finally{button.disabled=false;}};
   requestForm.onsubmit=async(event)=>{event.preventDefault();const button=requestForm.querySelector<HTMLButtonElement>('[type=submit]')!;button.disabled=true;try{const data=new FormData(requestForm);const result=await supabase!.rpc('request_creator_access',{p_message:data.get('message')});if(result.error)throw result.error;requestForm.reset();await load();status.textContent='Creator 승인 요청을 보냈습니다.';}catch(error){status.textContent=messageOf(error);}finally{button.disabled=false;}};
   load().catch((error)=>{status.textContent=messageOf(error);});

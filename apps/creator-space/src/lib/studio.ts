@@ -1,3 +1,4 @@
+import {flash} from './feedback';
 import { supabase, messageOf, ensureCommunityUser } from "./supabase";
 const paths: Record<string, string> = {
   work: "works",
@@ -20,7 +21,9 @@ const node = (tag: string, text: string) => {
   e.textContent = text;
   return e;
 };
+const guides:Record<string,string>={work:'개인 작품 — 게임, 일러스트, 기획서, AI 실험 등 나의 결과물과 제작 과정을 기록합니다.',project:'팀 프로젝트 — 목표, 진행 기간, 참여자와 역할을 기록합니다. 확인된 참여 이력은 포트폴리오에 연결됩니다.',teamup:'팀원 모집 — 함께 할 작업과 필요한 직군, 참여 조건 및 모집 기간을 적습니다.',event:'행사 — 게임잼, 전시, 발표회 등의 일정과 장소, 참가 방법을 안내합니다.'};
 function toggle() {
+  document.querySelector<HTMLElement>('[data-kind-guide]')!.textContent=guides[select.value];
   document.querySelector<HTMLElement>("[data-entry-fields]")!.hidden =
     select.value === "project";
   document.querySelector<HTMLElement>("[data-project-fields]")!.hidden =
@@ -36,7 +39,7 @@ function set(name: string, value: unknown) {
     el instanceof HTMLTextAreaElement ||
     el instanceof HTMLSelectElement
   )
-    el.value = Array.isArray(value) ? value.join(", ") : String(value ?? "");
+    {el.value = Array.isArray(value) ? value.join(", ") : String(value ?? "");el.dispatchEvent(new Event("change"));}
 }
 function option(name: string, id: string, title: string) {
   const el = form.elements.namedItem(name) as HTMLSelectElement;
@@ -139,7 +142,7 @@ async function load() {
           p_kind: item.kind,
         });
         if (result.error) throw result.error;
-        location.assign("/studio/");
+        flash("작업을 삭제했습니다.");location.assign("/studio/");
       } catch (e) {
         status.textContent = messageOf(e);
         remove.disabled = false;
@@ -214,6 +217,7 @@ async function load() {
   if (!invites.data?.length)
     box.append(node("p", "대기 중인 참여 요청이 없습니다."));
 }
+let dirty=false;form.addEventListener('input',()=>dirty=true);window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
 form.onsubmit = async (event) => {
   event.preventDefault();
   const button = document.querySelector<HTMLButtonElement>("[data-save]")!;
@@ -270,7 +274,7 @@ form.onsubmit = async (event) => {
       if (result.error) throw result.error;
       id = result.data;
     }
-    location.assign(`/${paths[kind]}/${id}/`);
+    dirty=false;flash(data.visibility==='draft'?'비공개 초안을 저장했습니다.':'작업을 저장했습니다.');location.assign(`/${paths[kind]}/${id}/`);
   } catch (e) {
     status.textContent = messageOf(e);
   } finally {

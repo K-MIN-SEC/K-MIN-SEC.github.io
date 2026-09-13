@@ -63,7 +63,7 @@ export function contentActions(item: CommunityContent, type: ContentType, reload
       const cancel = document.createElement('button'); cancel.type = 'button'; cancel.className = 'text-link'; cancel.textContent = '취소'; cancel.onclick = () => dialog.close();
       const update = async (password: string | null) => {
         save.disabled = open.disabled = true;
-        try { const result = await supabase!.rpc('set_space_password', { p_id: item.id, p_password: password }); if (result.error) throw result.error; dialog.close(); await reload(); }
+        try { const result = await supabase!.rpc('set_space_password', { p_id: item.id, p_password: password }); if (result.error) throw result.error; dialog.close(); await reload(); status.textContent='공개 설정을 변경했습니다.'; }
         catch (error) { note.textContent = messageOf(error); } finally { save.disabled = open.disabled = false; }
       };
       form.onsubmit = e => { e.preventDefault(); void update(input.value); };
@@ -74,7 +74,7 @@ export function contentActions(item: CommunityContent, type: ContentType, reload
     if (admin) {
       const pin = document.createElement('button'); pin.type = 'button'; pin.className = 'text-link'; pin.textContent = item.is_notice ? '공지 해제' : '공지로 등록';
       pin.disabled = Boolean(item.is_secret); if (item.is_secret) pin.title = '공개글만 공지로 등록할 수 있습니다.';
-      pin.onclick = async () => { pin.disabled = true; try { const result = await supabase!.rpc('set_space_notice', { p_id: item.id, p_notice: !item.is_notice }); if (result.error) throw result.error; await reload(); } catch (error) { status.textContent = messageOf(error); pin.disabled = false; } };
+      pin.onclick = async () => { pin.disabled = true; try { const result = await supabase!.rpc('set_space_notice', { p_id: item.id, p_notice: !item.is_notice }); if (result.error) throw result.error; await reload(); status.textContent=item.is_notice?'공지를 해제했습니다.':'공지로 등록했습니다.'; } catch (error) { status.textContent = messageOf(error); pin.disabled = false; } };
       actions.append(pin);
     }
   }

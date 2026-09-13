@@ -9,6 +9,15 @@ const acceptedFiles: Record<string, string> = {
   ods: 'application/vnd.oasis.opendocument.spreadsheet',
 };
 const extensionOf = (name: string) => name.toLowerCase().match(/\.([^.]+)$/)?.[1] ?? '';
+export const isPreviewImage = (name: string) => /\.(jpe?g|png|webp|gif)$/i.test(name);
+export async function previewImage(path: string, filename: string) {
+  if (!isPreviewImage(filename)) return null;
+  // The same authenticated private-bucket read used for downloads applies here.
+  const {data,error}=await supabase!.storage.from('space-files').download(path);
+  if(error)throw error;
+  if(!data || !['image/jpeg','image/png','image/webp','image/gif'].includes(data.type.split(';')[0]))throw new Error('이미지 형식을 확인할 수 없습니다. 다운로드로 확인해 주세요.');
+  return URL.createObjectURL(data);
+}
 export function validateFiles(files: File[]) {
   if (files.length > 5) throw new Error('첨부파일은 최대 5개입니다.');
   for (const file of files) {

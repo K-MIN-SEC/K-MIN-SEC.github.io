@@ -1,0 +1,15 @@
+---
+const {name,label,suggestions=[],placeholder='직접 입력해서 추가',max=20}=Astro.props;
+---
+<div class="tag-picker" data-tag-picker data-max={max}>
+  <span class="field-title" id={`${name}-label`}>{label}</span>
+  <p class="field-help">추천 항목을 눌러 선택하세요. 원하는 항목을 직접 추가할 수도 있습니다.</p>
+  <input type="hidden" name={name} />
+  <div class="tag-selected" data-selected aria-label={`선택한 ${label}`}></div>
+  <div class="tag-options" role="group" aria-labelledby={`${name}-label`}>
+    {suggestions.map((item:string|string[])=>{const [value,text]=Array.isArray(item)?item:[item,item];return <button type="button" class="tag-option" data-tag={value} aria-pressed="false">{text}</button>;})}
+  </div>
+  <div class="tag-add"><input data-tag-input aria-label={`${label} 직접 추가`} placeholder={placeholder} maxlength="40"/><button type="button" class="button secondary" data-tag-add>추가</button></div>
+  <small data-tag-status role="status"></small>
+</div>
+<script>import '../lib/tag-picker';</script>

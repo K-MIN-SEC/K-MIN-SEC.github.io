@@ -4,4 +4,4 @@ const id=Astro.params.id;if(!uuid(id))return Astro.redirect('/404/');
 let post:Record<string,any>|null=null;
 try{const r=await publicDB().from('space_posts').select('title,body,display_name,created_at').eq('id',id!).eq('status','visible').eq('is_secret',false).maybeSingle();if(r.error)throw r.error;post=r.data;}catch{Astro.response.status=503;}
 ---
-<Base title={post?.title||'게시글 확인'} description={post?.body?.slice(0,150)||'게시글 열람 권한을 확인합니다.'} noindex={!post}>{post&&<article class="cs-section"><h1>{post.title}</h1><p>{post.display_name} · {new Date(post.created_at).toLocaleDateString('ko-KR')}</p><div class="cs-body">{post.body}</div></article>}<SpaceBoard postId={id}/></Base>
+<Base title={post?.title||'게시글 확인'} description={post?.body?.slice(0,150)||'게시글 열람 권한을 확인합니다.'} noindex={!post}><div class="board-detail"><SpaceBoard postId={id}/><noscript>{post?<article><h1>{post.title}</h1><p>{post.body}</p></article>:<p>비밀글은 로그인 후 열람 권한을 확인해야 합니다.</p>}</noscript></div></Base>

@@ -1,3 +1,4 @@
+import {notify,flash} from './feedback';
 import { supabase, ensureCommunityUser, messageOf } from "./supabase";
 const root = document.querySelector<HTMLElement>("[data-detail]")!,
   id = root.dataset.id!,
@@ -19,12 +20,16 @@ const safe = (s: unknown) => {
   }
 };
 let target: string | undefined, userId: string | undefined;
+let busy=false;
 async function run(fn: () => Promise<void>) {
+  if(busy)return;busy=true;
+  const button=document.activeElement instanceof HTMLButtonElement?document.activeElement:null;
+  if(button)button.disabled=true;
   try {
     await fn();
   } catch (e) {
-    status.textContent = messageOf(e);
-  }
+    status.textContent = messageOf(e);notify(messageOf(e),"error");
+  } finally {busy=false;if(button)button.disabled=false;}
 }
 async function comments() {
   const result = await supabase!
@@ -39,7 +44,8 @@ async function comments() {
   list.replaceChildren();
   for (const c of result.data || []) {
     const row = node("article", "");
-    row.className = "cs-item";
+    row.className = "cs-item comment-item";
+    const actions=node("div", "");actions.className="comment-actions";
     row.append(node("strong", c.display_name), node("p", c.body));
     if (c.user_id === userId) {
       const edit = node("button", "수정") as HTMLButtonElement;
@@ -54,7 +60,8 @@ async function comments() {
         input.required = true;
         label.append(input);
         const save = node("button", "저장");
-        f.append(label, save);
+        const cancel=document.createElement('button');cancel.type='button';cancel.className='text-link';cancel.textContent='취소';cancel.onclick=()=>void run(comments);
+        save.className='button secondary';const controls=node('div','');controls.className='comment-actions';controls.append(save,cancel);f.append(label,controls);
         f.onsubmit = (e) => {
           e.preventDefault();
           void run(async () => {
@@ -64,7 +71,7 @@ async function comments() {
               p_comment: c.id,
             });
             if (r.error) throw r.error;
-            await comments();
+            await comments();notify("댓글을 수정했습니다.");
           });
         };
         row.replaceChildren(f);
@@ -78,14 +85,14 @@ async function comments() {
             p_id: c.id,
           });
           if (r.error) throw r.error;
-          await comments();
+          await comments();notify("댓글을 삭제했습니다.");
         });
-      row.append(edit, del);
+      actions.append(edit, del);
     }
     const report = node("button", "신고") as HTMLButtonElement;
     report.className = "text-link";
     report.onclick = () => void doReport(c.id);
-    row.append(report);
+    actions.append(report);row.append(actions);
     list.append(row);
   }
   if (!result.data?.length) list.append(node("p", "첫 댓글을 남겨보세요."));
@@ -190,7 +197,7 @@ async function load() {
         p_kind: kind,
       });
       if (r.error) throw r.error;
-      location.assign("/studio/");
+      flash("작업을 삭제했습니다.");location.assign("/studio/");
     });
   if (kind === "project") {
     get("project-section").hidden = false;
@@ -268,7 +275,7 @@ async function load() {
       await ensureCommunityUser();
       const r = await supabase!.rpc("toggle_target_reaction", { p_id: target });
       if (r.error) throw r.error;
-      await comments();
+      await comments();notify("좋아요 상태를 변경했습니다.");
     });
   get<HTMLButtonElement>("report").onclick = () => void doReport();
   get<HTMLFormElement>("comment-form").onsubmit = (e) => {
@@ -282,7 +289,7 @@ async function load() {
       });
       if (r.error) throw r.error;
       f.reset();
-      await comments();
+      await comments();notify("댓글을 등록했습니다.");
     });
   };
 }
