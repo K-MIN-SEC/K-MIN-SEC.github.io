@@ -5,6 +5,7 @@ MINSEC와 독립적으로 실행하는 Astro SSR 서비스입니다. 공유 Supa
 ## 실행
 
 ```sh
+npm ci
 cd apps/creator-space
 npm ci
 # .env.example을 .env로 복사하고 공개 연결값 입력
@@ -12,6 +13,8 @@ npm run dev
 ```
 
 주소: `http://127.0.0.1:4322/`. 작성·편집: `/studio/`, 프로필과 로그인: `/account/`, 운영: `/admin/`.
+
+전체 MINSEC 저장소 안에서 빌드할 때는 먼저 루트에서도 `npm ci`를 실행합니다. Vite가 상위 TypeScript 설정을 탐색하므로 해당 설정의 Astro 의존성도 필요합니다. 이 폴더만 별도 저장소로 옮긴 경우에는 앱의 `npm ci`만 필요합니다.
 
 ## 필요한 DB
 
