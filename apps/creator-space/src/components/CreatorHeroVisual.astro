@@ -21,8 +21,7 @@ import {heroSlides as slides} from '../data/hero-slides';
     const pause=root.querySelector<HTMLButtonElement>('[data-visual-pause]')!;
     const caption=root.querySelector<HTMLElement>('[data-visual-caption]')!;
     const link=root.querySelector<HTMLAnchorElement>('[data-visual-link]')!;
-    const reduced=matchMedia('(prefers-reduced-motion: reduce)');
-    let current=0,paused=reduced.matches,timer:ReturnType<typeof setTimeout>|undefined;
+    let current=0,paused=false,timer:ReturnType<typeof setTimeout>|undefined;
     const media=()=>slides.forEach((slide,i)=>{
       const active=i===current&&!paused&&!document.hidden;
       const video=slide.querySelector('video');if(video){if(active){video.muted=true;void video.play().catch(()=>{});}else video.pause();}
@@ -32,7 +31,6 @@ import {heroSlides as slides} from '../data/hero-slides';
     const show=(index:number)=>{current=index;slides.forEach((slide,i)=>slide.classList.toggle('is-active',i===index));buttons.forEach((b,i)=>b.setAttribute('aria-pressed',String(i===index)));caption.textContent=buttons[index].dataset.caption!;link.hidden=!buttons[index].dataset.href;if(!link.hidden)link.href=buttons[index].dataset.href!;else link.removeAttribute('href');};
     buttons.forEach((b,i)=>b.addEventListener('click',()=>{show(i);schedule();}));
     pause.addEventListener('click',()=>{paused=!paused;schedule();});
-    reduced.addEventListener('change',()=>{paused=reduced.matches;schedule();});
     document.addEventListener('visibilitychange',schedule);
     window.addEventListener('pagehide',()=>{clearTimeout(timer);slides.forEach(s=>s.querySelector('video')?.pause());});schedule();
   }
