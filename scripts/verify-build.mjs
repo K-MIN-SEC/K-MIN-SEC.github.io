@@ -51,7 +51,10 @@ assert.match(robots, site.hostname === 'example.com' ? /Disallow: \// : /Allow: 
 for (const file of files) {
   const html = read(file);
   const canonical = attr(html.match(/<link\b[^>]*rel="canonical"[^>]*>/)?.[0] || '', 'href');
-  const explicitlyNoindex = file.endsWith('404.html') || file.includes(`${join('dist', 'admin')}`) || file.includes(`${join('dist', 'account')}`);
+  const explicitlyNoindex = file.endsWith('404.html')
+    || file.includes(`${join('dist', 'admin')}`)
+    || file.includes(`${join('dist', 'account')}`)
+    || file.includes(`${join('dist', 'space')}`);
   if (explicitlyNoindex) {
     assert.ok(!sitemap.includes(`<loc>${canonical}</loc>`), `${file}: noindex page present in sitemap`);
     assert.ok(html.includes('content="noindex, follow"'));

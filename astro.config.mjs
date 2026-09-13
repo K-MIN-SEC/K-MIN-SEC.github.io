@@ -14,5 +14,5 @@ export default defineConfig({
   base: env.BASE_PATH || '/',
   output: 'static',
   trailingSlash: 'always',
-  integrations: [sitemap({ filter: (page) => !page.endsWith('/404/') && !page.includes('/admin/') && !page.endsWith('/account/') })],
+  integrations: [sitemap({ filter: (page) => !page.endsWith('/404/') && !page.includes('/admin/') && !page.endsWith('/account/') && !page.endsWith('/space/') })],
 });
