@@ -1,10 +1,10 @@
 ---
-import Base from '../../layouts/Base.astro';import ContentCard from '../../components/ContentCard.astro';import {publicDB,kinds,type Kind} from '../../lib/server';
+import Base from '../../layouts/Base.astro';import ContentCard from '../../components/ContentCard.astro';import {publicDB,kinds,withPublicAuthors,type Kind} from '../../lib/server';
 const kind=(Object.keys(kinds) as Kind[]).find(k=>kinds[k].path===Astro.params.collection);
 if(!kind)return Astro.redirect('/404/');
 const q=(Astro.url.searchParams.get('q')||'').slice(0,100),category=(Astro.url.searchParams.get('category')||'').slice(0,80),page=Math.max(1,Math.min(10000,Number(Astro.url.searchParams.get('page'))||1));
 let items:Record<string,any>[]=[],error=false;
-try{let query=publicDB().from(kind==='project'?'creator_projects':'creator_entries').select('*').eq('visibility','public').is('deleted_at',null);if(kind!=='project')query=query.eq('kind',kind).eq('moderation_status','visible');if(q)query=query.ilike('title',`%${q.replace(/[%_]/g,'')}%`);if(category)query=query.ilike('category',`%${category.replace(/[%_]/g,'')}%`);const result=await query.order('created_at',{ascending:false}).range((page-1)*24,page*24);if(result.error)throw result.error;items=result.data;}catch{error=true;Astro.response.status=503;}
+try{const db=publicDB();let query=db.from(kind==='project'?'creator_projects':'creator_entries').select('*').eq('visibility','public').is('deleted_at',null);if(kind!=='project')query=query.eq('kind',kind).eq('moderation_status','visible');if(q)query=query.ilike('title',`%${q.replace(/[%_]/g,'')}%`);if(category)query=query.ilike('category',`%${category.replace(/[%_]/g,'')}%`);const result=await query.order('created_at',{ascending:false}).range((page-1)*24,page*24);if(result.error)throw result.error;items=await withPublicAuthors(db,result.data||[]);}catch{error=true;Astro.response.status=503;}
 const descriptions:Record<string,string>={work:'게임, 기획서, 아트, 생성형 AI 실험 등 개인의 결과물과 제작 과정을 모읍니다.',project:'팀이 함께 만든 작업의 목표, 기간, 참여자와 역할을 기록합니다.',teamup:'프로젝트에 함께할 팀원을 찾습니다. 모집 직군, 작업 목표와 참여 조건을 확인하세요.',event:'게임잼, 전시, 발표회와 모임의 일정 및 참가 방법을 안내합니다.'};
 const next=new URL(Astro.url);next.searchParams.set('page',String(page+1));
 ---

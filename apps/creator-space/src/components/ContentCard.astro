@@ -2,5 +2,6 @@
 import {kinds,safeURL,type Kind} from '../lib/server';
 const {item,kind}=Astro.props as {item:Record<string,any>,kind:Kind};
 const href=`/${kinds[kind].path}/${item.id}/`,cover=safeURL(item.cover_url);
+const author=item.author as {handle?:string;display_name?:string}|undefined;
 ---
-<a class="cs-card" href={href}>{cover&&<img src={cover} alt={item.cover_alt||item.title} loading="lazy" referrerpolicy="no-referrer"/>}<span class="eyebrow">{item.featured?'FEATURED · ':''}{item.category||kinds[kind].label}</span><h2>{item.title}</h2><p>{item.summary}</p><span class="cs-meta">{new Date(item.created_at).toLocaleDateString('ko-KR')} ↗</span></a>
+<article class="cs-card content-card">{cover&&<img src={cover} alt={item.cover_alt||item.title} loading="lazy" referrerpolicy="no-referrer"/>}<span class="eyebrow">{item.featured?'FEATURED · ':''}{item.category||kinds[kind].label}</span><h2><a class="content-card-link" href={href}>{item.title}</a></h2><p>{item.summary}</p><footer class="content-card-footer"><span class="content-card-author">만든 사람 · {author?.handle?<a href={`/members/${author.handle}/`}>{author.display_name||author.handle}</a>:<span>프로필 비공개</span>}</span><span class="cs-meta">{new Date(item.created_at).toLocaleDateString('ko-KR')} ↗</span></footer></article>

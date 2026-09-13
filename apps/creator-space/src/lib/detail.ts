@@ -136,8 +136,31 @@ async function load() {
     status.append(a);
     return;
   }
+  const [authorResult, adminResult] = await Promise.all([
+    supabase
+      .from("member_profiles")
+      .select("display_name,handle")
+      .eq("user_id", item.owner_id)
+      .maybeSingle(),
+    userId
+      ? supabase.rpc("is_admin")
+      : Promise.resolve({ data: false, error: null }),
+  ]);
+  if (authorResult.error) throw authorResult.error;
+  if (adminResult.error) throw adminResult.error;
   get("title").textContent = item.title;
   get("summary").textContent = item.summary;
+  const author = get("author");
+  const authorLink = get<HTMLAnchorElement>("author-link");
+  author.hidden = false;
+  if (authorResult.data) {
+    authorLink.textContent =
+      authorResult.data.display_name || authorResult.data.handle;
+    authorLink.href = `/members/${authorResult.data.handle}/`;
+  } else {
+    authorLink.textContent = "프로필 비공개";
+    authorLink.removeAttribute("href");
+  }
   get("body").textContent = item.body || "";
   get("meta").textContent = [
     item.category,
@@ -188,7 +211,8 @@ async function load() {
       : item.visibility === "draft"
         ? "비공개 초안입니다."
         : "회원에게 공개된 콘텐츠입니다.";
-  get("author-actions").hidden = item.owner_id !== userId;
+  const canManage = item.owner_id === userId || Boolean(adminResult.data);
+  get("author-actions").hidden = !canManage;
   get<HTMLButtonElement>("delete").onclick = () =>
     void run(async () => {
       if (!confirm("이 콘텐츠를 삭제할까요?")) return;

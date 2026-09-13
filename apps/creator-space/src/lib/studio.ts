@@ -76,12 +76,14 @@ async function load() {
   const db = supabase!;
   const [
     { data: creator, error: ce },
+    { data: admin, error: ae },
     entries,
     projects,
     memberships,
     invites,
   ] = await Promise.all([
     db.rpc("is_creator"),
+    db.rpc("is_admin"),
     db
       .from("creator_entries")
       .select("*")
@@ -107,15 +109,18 @@ async function load() {
   ]);
   for (const error of [
     ce,
+    ae,
     entries.error,
     projects.error,
     memberships.error,
     invites.error,
   ])
     if (error) throw error;
-  fields.disabled = !creator;
+  fields.disabled = !creator && !(editing && admin);
   status.textContent = creator
     ? "새로 작성하거나 아래 내 작업에서 수정할 글을 선택해 주세요."
+    : editing && admin
+      ? "운영자 권한으로 이 작업을 편집하고 있습니다."
     : "프로필 화면에서 Creator 승인을 신청해 주세요. 일반 게시글은 승인 없이 작성할 수 있습니다.";
   for (const p of projects.data || []) option("project_id", p.id, p.title);
   const ids = (memberships.data || [])
@@ -131,10 +136,26 @@ async function load() {
   }
   for (const t of entries.data || [])
     if (t.kind === "teamup") option("team_up_id", t.id, t.title);
-  const all = [
+  const all: Record<string, any>[] = [
     ...(entries.data || []),
     ...(projects.data || []).map((p) => ({ ...p, kind: "project" })),
   ];
+  if (editing && admin && !all.some((item) => item.id === editing)) {
+    let query = db
+      .from(editedKind === "project" ? "creator_projects" : "creator_entries")
+      .select("*")
+      .eq("id", editing)
+      .is("deleted_at", null);
+    if (editedKind !== "project") query = query.eq("kind", editedKind);
+    const managed = await query.maybeSingle();
+    if (managed.error) throw managed.error;
+    if (managed.data)
+      all.push({
+        ...managed.data,
+        kind: editedKind,
+        managedByStaff: managed.data.owner_id !== user.id,
+      });
+  }
   const list = document.querySelector<HTMLElement>("[data-my-content]")!;
   list.replaceChildren();
   for (const item of all) {
@@ -185,7 +206,7 @@ async function load() {
   if (!all.length) list.append(node("p", "아직 저장한 작업이 없습니다."));
   if (editing) {
     const item = all.find((x) => x.id === editing && x.kind === editedKind);
-    if (!item) throw new Error("편집할 수 있는 내 작업을 찾지 못했습니다.");
+    if (!item) throw new Error("편집 권한이 있거나 존재하는 작업을 찾지 못했습니다.");
     originalData=item;for (const [key, value] of Object.entries(item)) set(key, value);toggle();
     select.disabled = true;
     const view = document.querySelector<HTMLAnchorElement>("[data-view]")!;

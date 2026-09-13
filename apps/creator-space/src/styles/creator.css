@@ -101,6 +101,7 @@
 .cs-card:hover {
   border-color: #7b9a63;
 }
+.content-card{position:relative}.content-card-link::after{content:"";position:absolute;inset:0;z-index:1}.content-card-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;padding-top:4px}.content-card-author{position:relative;z-index:2;color:var(--muted);font-size:13px;min-width:0;overflow-wrap:anywhere}.content-card-author a{color:#d7efc2;font-weight:600}.content-card-author a:hover{text-decoration:underline}.content-card-footer .cs-meta{flex-shrink:0}.content-author-line{display:flex;align-items:center;gap:12px;margin:18px 0 8px;color:var(--muted);font-size:14px}.content-author-line span{font-size:12px}.content-author-line a{color:#e0f5ce;font-weight:700}.content-author-line a[href]::after{content:" 프로필 →";color:var(--green);font-size:12px;font-weight:500;margin-left:6px}
 .cs-empty {
   padding: 42px;
   border: 1px dashed #3b4a37;
@@ -255,6 +256,7 @@ button {
   .cs-bar h1 {
     font-size: 34px;
   }
+  .content-card-footer{align-items:flex-start;flex-direction:column;gap:7px}
 }
 
 .kind-fields{display:grid;gap:22px}.kind-fields>label{display:grid;gap:8px}.authoring-checklist{padding:18px 20px;border:1px solid var(--line);border-radius:8px;background:#171f15}.authoring-checklist p{margin:8px 0 0;font-size:13px}.author-identity{font-size:14px;margin:0}.author-identity strong{color:var(--text);margin-left:10px}.existing-file-row{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}.existing-file-row label{display:flex;align-items:center;gap:8px;white-space:nowrap;font-size:13px}.existing-file-row input[type=checkbox]{width:auto;min-height:auto}.reply-author{display:flex;align-items:center;font-size:13px;color:var(--muted);padding:0 10px}.space-reply-form{grid-template-columns:auto minmax(0,1fr) auto}@media(max-width:680px){.space-reply-form{grid-template-columns:1fr auto}.space-reply-form .reply-author{grid-column:1/-1;padding:0}.existing-file-row{flex-wrap:wrap}}

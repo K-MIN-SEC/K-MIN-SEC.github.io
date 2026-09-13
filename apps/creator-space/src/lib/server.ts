@@ -33,3 +33,27 @@ export const uuid = (s: string | undefined) =>
       s,
     ),
   );
+
+export type PublicAuthor = {
+  user_id: string;
+  handle: string;
+  display_name: string;
+};
+
+export async function withPublicAuthors(
+  db: ReturnType<typeof publicDB>,
+  items: Record<string, any>[],
+) {
+  const ids = [...new Set(items.map((item) => item.owner_id).filter(Boolean))];
+  if (!ids.length) return items;
+  const result = await db
+    .from("member_profiles")
+    .select("user_id,handle,display_name")
+    .eq("visibility", "public")
+    .in("user_id", ids);
+  if (result.error) throw result.error;
+  const authors = new Map(
+    (result.data || []).map((author) => [author.user_id, author]),
+  );
+  return items.map((item) => ({ ...item, author: authors.get(item.owner_id) }));
+}
