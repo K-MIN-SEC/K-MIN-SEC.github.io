@@ -8,7 +8,7 @@
 - 구현: Projects/Play 데이터 관리, Markdown Devlog, 프로젝트 반응, Account, Admin, CMS, SEO, 확장 기능 feature flag.
 - 완료: GitHub Pages 자동 배포, Supabase 공개 키 연결, 공개 Auth URL/Redirect URL 설정.
 - 완료: GitHub OAuth 앱 발급, Supabase 공급자 연결, 공개 사이트 로그인 확인.
-- 완료: Google OAuth 앱·웹 클라이언트 발급, Supabase 공급자 연결, 외부 사용자용 프로덕션 공개, 공개 사이트 버튼 활성화.
+- 완료: Google OAuth 앱·웹 클라이언트 발급, Supabase 공급자 연결, 외부 사용자용 프로덕션 공개, 공개 사이트 버튼 활성화와 callback 로그인 확인.
 - 미완료: 별도 Member 계정 로그인 QA, Analytics 공급자 연결.
 - Migration: 없음.
 - 환경값: `PUBLIC_EMAIL_LOGIN=false`. 숨겨진 QA 경로에서 `PUBLIC_SPACE_EXTENDED=true`로 실제 검증한다.
@@ -50,7 +50,6 @@
 
 ## 남은 순서
 
-1. 공개 사이트에서 Google 로그인 callback을 확인한다.
-2. 별도 Member 계정으로 비밀글 비밀번호 해제 QA를 수행한다.
-3. 개인 사이트에서는 Space QA 경로를 계속 숨기고, Creator Space 별도 서비스에서만 확장 UI를 공개한다.
-4. Creator Space 배포 전 해당 서비스 환경에 `PUBLIC_SPACE_EXTENDED=true`를 설정한다.
+1. 별도 Member 계정으로 비밀글 비밀번호 해제 QA를 수행한다.
+2. 개인 사이트에서는 Space QA 경로를 계속 숨기고, Creator Space 별도 서비스에서만 확장 UI를 공개한다.
+3. Creator Space 배포 전 해당 서비스 환경에 `PUBLIC_SPACE_EXTENDED=true`를 설정한다.
