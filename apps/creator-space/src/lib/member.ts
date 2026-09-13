@@ -28,7 +28,7 @@ async function hydrate() {
   }
   get("name").textContent = p.display_name;
   get("bio").textContent = p.bio;get("bio").hidden=!p.bio;
-  get("meta").textContent = details.affiliation;get("meta").hidden=!details.affiliation;
+  get("meta").textContent = [details.affiliation,details.schoolYear].filter(Boolean).join(' · ');get("meta").hidden=!details.affiliation&&!details.schoolYear;
   get("status").textContent =
     p.visibility === "public" ? "" : p.visibility === "private" ? "나만 볼 수 있는 비공개 프로필입니다." : "회원에게 공개된 프로필입니다.";
   const [contacts, works, members] = await Promise.all([

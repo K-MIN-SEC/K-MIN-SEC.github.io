@@ -214,5 +214,20 @@ try {
   await asUser(owner);await affiliation('none','discard','discard');aff=(await db.query('select * from member_profiles where user_id=$1',[owner])).rows[0];assert.equal(aff.affiliation_name,null);assert.equal(aff.affiliation_unit,null);
   await db.exec('reset role');await db.exec(readFileSync('supabase/migrations/0010_profile_affiliations.sql','utf8'));
   assert.equal((await db.query('select affiliation_type from member_profiles where user_id=$1',[owner])).rows[0].affiliation_type,'none');
-  console.log('Passed: migrations 0001–0010, affiliation migration/validation/ownership/privacy, Creator authoring ownership, registry existence/access, confirmed history, profile privacy, secret posts, private files and moderation.');
+  // School years are editable only for school affiliations; other affiliations preserve history.
+  await db.exec(readFileSync('supabase/migrations/0011_school_year_profiles.sql','utf8'));
+  const schoolProfile=(admission,expected,graduated=null)=>db.query("select public.upsert_member_profile_v3('minsec-test','MINSEC Test',p_affiliation_type=>'school',p_affiliation_name=>'학교',p_admission_year=>$1::smallint,p_expected_graduation_year=>$2::smallint,p_graduation_year=>$3::smallint,p_visibility=>'public')",[admission,expected,graduated]);
+  await asUser(owner);await schoolProfile(2024,2027);
+  let years=(await db.query('select admission_year,expected_graduation_year,graduation_year from member_profiles where user_id=$1',[owner])).rows[0];
+  assert.deepEqual(years,{admission_year:2024,expected_graduation_year:2027,graduation_year:null});
+  await assert.rejects(schoolProfile(2028,2027),/Expected graduation year must not precede admission year/);
+  await assert.rejects(schoolProfile(2024,2027,2023),/Graduation year must not precede admission year/);
+  await db.query("select public.upsert_member_profile_v3('minsec-test','MINSEC Test',p_affiliation_type=>'company',p_affiliation_name=>'회사',p_visibility=>'public')");
+  years=(await db.query('select admission_year,expected_graduation_year,graduation_year from member_profiles where user_id=$1',[owner])).rows[0];
+  assert.deepEqual(years,{admission_year:2024,expected_graduation_year:2027,graduation_year:null});
+  await asUser(reader);await db.query("select public.upsert_member_profile_v3('reader-profile','Reader',p_affiliation_type=>'school',p_affiliation_name=>'다른 학교',p_admission_year=>2025::smallint,p_visibility=>'private')");
+  assert.equal((await db.query('select admission_year from member_profiles where user_id=$1',[reader])).rows[0].admission_year,2025);
+  await asUser(owner);assert.equal((await db.query('select admission_year from member_profiles where user_id=$1',[owner])).rows[0].admission_year,2024);
+  await asUser(null);await assert.rejects(schoolProfile(2024,2027),/permission denied/);
+  console.log('Passed: migrations 0001–0011, school-year and affiliation validation/preservation/ownership, Creator authoring ownership, registry existence/access, confirmed history, profile privacy, secret posts, private files and moderation.');
 } finally { await db.close(); }

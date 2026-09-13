@@ -1,9 +1,47 @@
 ---
 import {profileSummary} from '../../lib/profile-summary';
-import Base from '../../layouts/Base.astro';import {publicDB} from '../../lib/server';
-const q=(Astro.url.searchParams.get('q')||'').slice(0,80),year=Number(Astro.url.searchParams.get('year'))||null,role=(Astro.url.searchParams.get('role')||'').slice(0,80),page=Math.max(1,Math.min(10000,Number(Astro.url.searchParams.get('page'))||1));
+import {affiliationOptions,availabilityOptions,profileInterests,profileRoles,profileTools} from '../../data/profile-options';
+import Base from '../../layouts/Base.astro';
+import {publicDB} from '../../lib/server';
+
+const value=(name:string,max=80)=>(Astro.url.searchParams.get(name)||'').slice(0,max);
+const q=value('q'),role=value('role'),tool=value('tool'),interest=value('interest');
+const availability=value('availability'),affiliation=value('affiliation'),organization=value('organization',100);
+const yearValue=value('year',4),year=/^20\d{2}$|^2100$/.test(yearValue)?Number(yearValue):null;
+const page=Math.max(1,Math.min(10000,Number(Astro.url.searchParams.get('page'))||1));
+const safeLike=(input:string)=>input.replace(/[%_,().]/g,'');
+const activeFilters=[q,role,tool,interest,availability,affiliation,organization,yearValue].filter(Boolean).length;
 let profiles:Record<string,any>[]=[],error=false;
-try{let query=publicDB().from('member_profiles').select('handle,display_name,bio,primary_role,admission_year,graduation_year,tools,availability').eq('visibility','public');if(q)query=query.ilike('display_name',`%${q.replace(/[%_]/g,'')}%`);if(year)query=query.eq('admission_year',year);if(role)query=query.ilike('primary_role',`%${role.replace(/[%_]/g,'')}%`);const r=await query.order('updated_at',{ascending:false}).range((page-1)*24,page*24);if(r.error)throw r.error;profiles=r.data;}catch{error=true;Astro.response.status=503;}
+try{
+  let query=publicDB().from('member_profiles').select('handle,display_name,bio,primary_role,admission_year,expected_graduation_year,graduation_year,affiliation_type,affiliation_name,affiliation_unit,interests,tools,availability').eq('visibility','public');
+  if(q){const clean=safeLike(q);query=query.or(`display_name.ilike.%${clean}%,handle.ilike.%${clean}%`);}
+  if(role)query=query.eq('primary_role',role);
+  if(tool)query=query.contains('tools',[tool]);
+  if(interest)query=query.contains('interests',[interest]);
+  if(availability)query=query.eq('availability',availability);
+  if(affiliation)query=query.eq('affiliation_type',affiliation);
+  if(organization)query=query.ilike('affiliation_name',`%${safeLike(organization)}%`);
+  if(year)query=query.or(`graduation_year.eq.${year},and(graduation_year.is.null,expected_graduation_year.eq.${year})`);
+  const result=await query.order('updated_at',{ascending:false}).range((page-1)*24,page*24);
+  if(result.error)throw result.error;profiles=result.data;
+}catch{error=true;Astro.response.status=503;}
 const next=new URL(Astro.url);next.searchParams.set('page',String(page+1));
 ---
-<Base title="사람들 · 포트폴리오 아카이브" noindex={error||Boolean(q||year||role)||page>1}><header class="page-header"><span class="eyebrow">PEOPLE & PORTFOLIOS</span><h1>함께 만들어갈 사람들.</h1><p>공개 프로필과 작업, 확인된 프로젝트 경험을 살펴보세요.</p><a class="button primary" href="/account/profile/">내 프로필 편집</a></header><form class="cs-filters"><input name="q" value={q} placeholder="이름" aria-label="이름"/><input name="role" value={role} placeholder="직군" aria-label="직군"/><button class="button secondary">검색</button></form>{error?<p class="cs-empty">프로필을 불러오지 못했습니다.</p>:profiles.length?<div class="cs-grid">{profiles.slice(0,24).map(p=><a href={`/members/${p.handle}/`} class="cs-card"><span class="eyebrow">{p.primary_role||'CREATOR'}</span><h2>{p.display_name}</h2><p>{p.bio}</p><small>{(p.tools||[]).join(' / ')}</small><span class="profile-availability" data-state={profileSummary(p).availabilityState} hidden={!profileSummary(p).availability}>{profileSummary(p).availability}</span></a>)}</div>:<p class="cs-empty">조건에 맞는 공개 프로필이 없습니다.</p>}{profiles.length>24&&<a href={next.pathname+next.search}>다음 페이지 →</a>}</Base>
+<Base title="사람들 · 포트폴리오 아카이브" noindex={error||activeFilters>0||page>1}>
+  <header class="compact-header people-header"><span class="eyebrow">PEOPLE & PORTFOLIOS</span><h1>함께 만들어갈 사람들.</h1><p>직군과 도구, 관심 분야, 참여 상태로 필요한 동료를 찾아보세요.</p><a class="button primary" href="/account/profile/">내 프로필 편집</a></header>
+  <form class="people-filters">
+    <div class="people-filter-grid">
+      <label>이름·프로필 ID<input name="q" value={q} placeholder="이름 또는 주소 ID"/></label>
+      <label>직군<select name="role"><option value="">전체 직군</option>{profileRoles.map(item=><option value={item} selected={role===item}>{item}</option>)}</select></label>
+      <label>사용 도구<select name="tool"><option value="">전체 도구</option>{profileTools.map(([item,label])=><option value={item} selected={tool===item}>{label}</option>)}</select></label>
+      <label>관심 분야<select name="interest"><option value="">전체 관심 분야</option>{profileInterests.map(item=><option value={item} selected={interest===item}>{item}</option>)}</select></label>
+      <label>프로젝트 참여 상태<select name="availability"><option value="">전체 상태</option>{availabilityOptions.map(([item,label])=><option value={item} selected={availability===item}>{label}</option>)}</select></label>
+      <label>소속 종류<select name="affiliation"><option value="">전체 소속</option>{affiliationOptions.map(([item,label])=><option value={item} selected={affiliation===item}>{label}</option>)}<option value="none" selected={affiliation==='none'}>소속 없음</option></select></label>
+      <label>학교·기업·소속명<input name="organization" value={organization} placeholder="예: 서일대학교"/></label>
+      <label>졸업·졸업 예정 연도<input name="year" value={yearValue} type="number" min="2000" max="2100" placeholder="예: 2027"/></label>
+    </div>
+    <div class="people-filter-actions"><span>{activeFilters?`${activeFilters}개 조건 적용 중`:'조건을 선택해 원하는 동료를 찾아보세요.'}</span><a class="button secondary" href="/members/" hidden={!activeFilters}>초기화</a><button class="button primary">찾기</button></div>
+  </form>
+  {error?<p class="cs-empty">프로필을 불러오지 못했습니다.</p>:profiles.length?<div class="cs-grid people-results">{profiles.slice(0,24).map(p=>{const details=profileSummary(p);return <a href={`/members/${p.handle}/`} class="cs-card people-card"><span class="eyebrow">{p.primary_role||'CREATOR'}</span><h2>{p.display_name}</h2><p>{p.bio}</p><small>{[details.affiliation,details.schoolYear].filter(Boolean).join(' · ')}</small><div class="profile-tags">{(p.tools||[]).slice(0,4).map((item:string)=><span class="profile-tag">{item}</span>)}</div><span class="profile-availability" data-state={details.availabilityState} hidden={!details.availability}>{details.availability}</span></a>})}</div>:<div class="cs-empty"><h2>조건에 맞는 공개 프로필이 없습니다.</h2><p>조건을 줄이거나 다른 분야를 선택해 보세요.</p><a href="/members/">필터 초기화 →</a></div>}
+  {profiles.length>24&&<a class="button secondary" href={next.pathname+next.search}>다음 페이지 →</a>}
+</Base>

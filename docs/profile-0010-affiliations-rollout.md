@@ -2,7 +2,7 @@
 
 ## Purpose and compatibility
 
-Profiles support no affiliation, school, company and other organizations. The editor changes labels and fields for the selected type. Public and member profile rendering use the same affiliation summary. Admission and graduation dates are no longer editor inputs or public profile content.
+Profiles support no affiliation, school, company and other organizations. The editor changes labels and fields for the selected type. Public and member profile rendering use the same affiliation summary. Migration 0011 restores optional admission, expected-graduation and graduation-year editing only while school is selected.
 
 `0010_profile_affiliations.sql` adds `affiliation_type`, `affiliation_name` and `affiliation_unit`. Existing school/departments are backfilled once; rerunning does not overwrite a later explicit choice of no affiliation. Historical education fields remain intact.
 
