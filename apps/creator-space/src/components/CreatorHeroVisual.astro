@@ -3,7 +3,7 @@ import {heroSlides as slides} from '../data/hero-slides';
 ---
 {slides.length>0&&<div class="creator-visual" data-creator-visual aria-label="창작과 프로젝트 미디어">
   <div class="creator-visual-images" aria-hidden="true">
-    {slides.map((slide,i)=><div class:list={['creator-visual-slide',{'is-active':i===0}]} data-visual-slide data-type={slide.type} data-duration={slide.durationMs||6500} style={`--media-fit:${slide.fit||'cover'}`}>
+    {slides.map((slide,i)=><div class:list={['creator-visual-slide',{'is-active':i===0}]} data-visual-slide data-type={slide.type} data-duration={slide.durationMs||3000} style={`--media-fit:${slide.fit||'cover'}`}>
       {slide.type==='video'?<video src={slide.src} poster={slide.poster} muted loop playsinline preload="none" tabindex="-1"/>:<img src={slide.type==='gif'?slide.poster:slide.src} data-gif={slide.type==='gif'?slide.src:undefined} data-poster={slide.type==='gif'?slide.poster:undefined} alt="" width="900" height="900" decoding="async" loading={i===0?'eager':'lazy'}/>}
     </div>)}
   </div>
@@ -25,8 +25,8 @@ import {heroSlides as slides} from '../data/hero-slides';
       const video=slide.querySelector('video');if(video){if(active){video.muted=true;void video.play().catch(()=>{});}else video.pause();}
       const gif=slide.querySelector<HTMLImageElement>('[data-gif]');if(gif)gif.src=(active?gif.dataset.gif:gif.dataset.poster)!;
     });
-    const schedule=()=>{clearTimeout(timer);media();if(!document.hidden&&slides.length>1)timer=setTimeout(()=>{show((current+1)%slides.length);schedule();},Math.max(3000,Number(slides[current].dataset.duration)||6500));};
-    const show=(index:number)=>{current=index;slides.forEach((slide,i)=>slide.classList.toggle('is-active',i===index));buttons.forEach((b,i)=>b.setAttribute('aria-pressed',String(i===index)));caption.textContent=buttons[index].dataset.caption!;link.hidden=!buttons[index].dataset.href;if(!link.hidden)link.href=buttons[index].dataset.href!;else link.removeAttribute('href');};
+    const schedule=()=>{clearTimeout(timer);media();if(!document.hidden&&slides.length>1)timer=setTimeout(()=>{show((current+1)%slides.length);schedule();},Math.max(1800,Number(slides[current].dataset.duration)||3000));};
+    const show=(index:number)=>{const previous=current;current=index;slides.forEach((slide,i)=>{slide.classList.toggle('is-active',i===index);slide.classList.toggle('is-leaving',i===previous&&previous!==index);});buttons.forEach((b,i)=>b.setAttribute('aria-pressed',String(i===index)));caption.textContent=buttons[index].dataset.caption!;link.hidden=!buttons[index].dataset.href;if(!link.hidden)link.href=buttons[index].dataset.href!;else link.removeAttribute('href');};
     buttons.forEach((b,i)=>b.addEventListener('click',()=>{show(i);schedule();}));
     document.addEventListener('visibilitychange',schedule);
     window.addEventListener('pagehide',()=>{clearTimeout(timer);slides.forEach(s=>s.querySelector('video')?.pause());});schedule();

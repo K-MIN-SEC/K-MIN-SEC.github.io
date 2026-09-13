@@ -65,7 +65,7 @@ MINSEC CMS       No repository access | GitHub Repository Editor
 
 ## Profile과 연락처
 
-Profile은 소개, 직군, 관심 분야, 사용 도구, 프로젝트 참여 상태를 제공한다. 학교 정보는 선택 입력이며 입학·졸업 연도는 저장만 유지하고 프로필에 노출하지 않는다. 사용자가 등록한 Works와 확인된 Project Experience를 함께 보여준다.
+Profile은 소개, 직군, 관심 분야, 사용 도구, 프로젝트 참여 상태를 제공한다. 소속은 없음·학교·기업·기타 중 선택하며, 학교명/학과 또는 기업명/부서·팀 등 선택한 유형에 맞게 입력한다. 공개 프로필은 선택한 소속 정보만 표시한다. 기존 학교·입학·졸업 정보는 이전 데이터 보존용으로 유지하며 연도는 편집 양식과 프로필에 노출하지 않는다. 사용자가 등록한 Works와 확인된 Project Experience를 함께 보여준다.
 
 연락처는 Auth 이메일과 분리해 사용자가 직접 입력한다. MVP는 Email, Discord, GitHub, X, 개인 사이트를 지원하고 전화번호는 지원하지 않는다. 연락처마다 `public`, `members`, `private` 공개 범위를 둔다. 사용자가 명시적으로 허용한 값만 HTML과 API에 노출한다.
 

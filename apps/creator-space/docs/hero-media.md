@@ -12,8 +12,8 @@ Supported media:
 - `type: 'video'`: directly playable MP4/WebM `src`, with a required still `poster`.
   YouTube/watch-page URLs are not direct video files.
 
-Optional fields: `href` (project detail link), `durationMs` (default 6500,
-minimum 3000), and `fit` (`contain` for cutouts, `cover` for full frames).
+Optional fields: `href` (project detail link), `durationMs` (default 3000,
+minimum 1800), and `fit` (`contain` for cutouts, `cover` for full frames).
 `label` names the selector; `caption` describes the project or theme.
 Put locally served media in `public/images/creator/` or use an authorized HTTPS
 media URL. Do not expose private attachments through this public hero.
@@ -29,8 +29,9 @@ Example replacement entry:
 }
 ```
 
-Only the active video plays, muted and inline. GIFs use posters while inactive. Slides start rotating automatically on entry. Reduced-motion CSS disables
-the crossfade transition but does not stop the requested automatic rotation.
+Only the active video plays, muted and inline. GIFs use posters while inactive.
+Slides start rotating automatically on entry, moving horizontally over 0.85 seconds.
+The explicit continuous-sliding design also applies with reduced-motion enabled.
 There is no pause/play control, as requested. Rotation continues while the page
 is visible. Selecting a slide restarts its timer. Background tabs stop playback.
 Default images are AI-generated cutouts, not actual community project works.

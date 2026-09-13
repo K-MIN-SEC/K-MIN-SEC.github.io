@@ -194,5 +194,25 @@ try {
   await asUser(null);assert.equal((await db.query('select id from content_targets where id=$1',[workTarget])).rows.length,0);
   await asUser(admin);await db.exec('reset role');
   assert.equal((await db.query('select status from content_targets where id=$1',[workTarget])).rows[0].status,'deleted');
-  console.log('Passed: migrations 0001–0009, Creator authoring ownership, registry existence/access, confirmed history, profile privacy, secret posts, private files and moderation.');
+  // Additive affiliation migration backfills school records without losing years.
+  await asUser(owner);
+  await db.query("select public.upsert_member_profile('minsec-test','MINSEC Test',p_school_name=>'학교',p_department_name=>'학과',p_admission_year=>2024::smallint,p_visibility=>'public')");
+  await db.exec('reset role');
+  await db.exec(readFileSync('supabase/migrations/0010_profile_affiliations.sql','utf8'));
+  const school=(await db.query('select affiliation_type,affiliation_name,admission_year from member_profiles where user_id=$1',[owner])).rows[0];
+  assert.equal(school.affiliation_type,'school');assert.equal(school.affiliation_name,'학교');assert.equal(school.admission_year,2024);
+  const affiliation=(type,name,unit=null)=>db.query("select public.upsert_member_profile_v2('minsec-test','MINSEC Test',p_affiliation_type=>$1,p_affiliation_name=>$2,p_affiliation_unit=>$3,p_visibility=>'private')",[type,name,unit]);
+  await asUser(owner);await affiliation('company','회사','개발팀');
+  let aff=(await db.query('select * from member_profiles where user_id=$1',[owner])).rows[0];assert.equal(aff.affiliation_type,'company');assert.equal(aff.affiliation_unit,'개발팀');assert.equal(aff.school_name,'학교');assert.equal(aff.admission_year,2024);
+  await assert.rejects(affiliation('company',''),/Affiliation name required/);
+  await assert.rejects(affiliation('invalid','회사'),/Invalid affiliation type/);
+  await assert.rejects(affiliation('other','a'.repeat(101)),/Affiliation too long/);
+  await asUser(reader);assert.equal((await db.query('select * from member_profiles where user_id=$1',[owner])).rows.length,0);
+  await assert.rejects(db.query("update member_profiles set affiliation_type='none' where user_id=$1",[owner]),/permission denied/);
+  await asUser(null);await assert.rejects(affiliation('other','팀'),/permission denied/);
+  await asUser(owner,true);await assert.rejects(affiliation('other','팀'),/Login required/);
+  await asUser(owner);await affiliation('none','discard','discard');aff=(await db.query('select * from member_profiles where user_id=$1',[owner])).rows[0];assert.equal(aff.affiliation_name,null);assert.equal(aff.affiliation_unit,null);
+  await db.exec('reset role');await db.exec(readFileSync('supabase/migrations/0010_profile_affiliations.sql','utf8'));
+  assert.equal((await db.query('select affiliation_type from member_profiles where user_id=$1',[owner])).rows[0].affiliation_type,'none');
+  console.log('Passed: migrations 0001–0010, affiliation migration/validation/ownership/privacy, Creator authoring ownership, registry existence/access, confirmed history, profile privacy, secret posts, private files and moderation.');
 } finally { await db.close(); }
