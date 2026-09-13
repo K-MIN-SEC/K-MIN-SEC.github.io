@@ -81,12 +81,8 @@ const { projectId, projectTitle } = Astro.props;
     likeButton.addEventListener('click', async () => {
       likeButton.disabled = true;
       try {
-        const user = await ensureCommunityUser();
-        const active = likeButton.getAttribute('aria-pressed') === 'true';
-        const query = active
-          ? supabase!.from('project_likes').delete().eq('project_id', projectId).eq('user_id', user.id)
-          : supabase!.from('project_likes').insert({ project_id: projectId, user_id: user.id });
-        const { error } = await query; if (error) throw error;
+        await ensureCommunityUser();
+        const { error } = await supabase!.rpc('toggle_project_like', { p_project_id: projectId }); if (error) throw error;
         await load();
       } catch (error) { status.textContent = messageOf(error); }
       likeButton.disabled = false;
@@ -96,8 +92,8 @@ const { projectId, projectTitle } = Astro.props;
       event.preventDefault();
       const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]')!; submit.disabled = true;
       try {
-        const data = new FormData(form); const user = await ensureCommunityUser();
-        const { error } = await supabase!.from('project_comments').insert({ project_id: projectId, user_id: user.id, display_name: String(data.get('display_name')).trim(), body: String(data.get('body')).trim() });
+        const data = new FormData(form); await ensureCommunityUser();
+        const { error } = await supabase!.rpc('create_project_comment', { p_project_id: projectId, p_name: String(data.get('display_name')).trim(), p_body: String(data.get('body')).trim() });
         if (error) throw error; form.reset(); await load(); status.textContent = '댓글을 남겼습니다.';
       } catch (error) { status.textContent = messageOf(error); }
       submit.disabled = false;
@@ -108,8 +104,8 @@ const { projectId, projectTitle } = Astro.props;
       const submitter = (event as SubmitEvent).submitter as HTMLButtonElement | null;
       if (submitter?.value !== 'submit') { dialog.close(); return; }
       try {
-        const data = new FormData(reportForm); const user = await ensureCommunityUser();
-        const { error } = await supabase!.from('reports').insert({ user_id: user.id, target_type: 'project_comment', target_id: data.get('target_id'), reason: data.get('reason') });
+        const data = new FormData(reportForm); await ensureCommunityUser();
+        const { error } = await supabase!.rpc('create_community_report', { p_type: 'project_comment', p_target_id: data.get('target_id'), p_reason: data.get('reason') });
         if (error) throw error; dialog.close(); status.textContent = '신고가 접수되었습니다.';
       } catch (error) { status.textContent = messageOf(error); }
     });

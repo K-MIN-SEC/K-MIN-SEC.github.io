@@ -1,10 +1,18 @@
 import { supabase } from './supabase';
 export const spaceExtendedEnabled = import.meta.env.PUBLIC_SPACE_EXTENDED === 'true';
-const types = ['image/jpeg','image/png','image/webp','image/gif','application/pdf','text/plain','application/zip','application/x-zip-compressed'];
+const acceptedFiles: Record<string, string> = {
+  jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif',
+  pdf: 'application/pdf', txt: 'text/plain',
+  hwp: 'application/x-hwp', hwpx: 'application/vnd.hancom.hwpx',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  ods: 'application/vnd.oasis.opendocument.spreadsheet',
+};
+const extensionOf = (name: string) => name.toLowerCase().match(/\.([^.]+)$/)?.[1] ?? '';
 export function validateFiles(files: File[]) {
   if (files.length > 5) throw new Error('첨부파일은 최대 5개입니다.');
   for (const file of files) {
-    if (!types.includes(file.type) || file.size > 10 * 1024 * 1024 || file.name.length > 180) throw new Error(`${file.name}: 이미지·PDF·TXT·ZIP 파일을 10MB 이하로 선택해 주세요.`);
+    if (!acceptedFiles[extensionOf(file.name)] || file.size > 10 * 1024 * 1024 || file.name.length > 180) throw new Error(`${file.name}: 이미지·PDF·TXT·한글·Word·Excel 문서를 10MB 이하로 선택해 주세요.`);
   }
 }
 export async function uploadFiles(postId: string, files: File[]) {
@@ -12,7 +20,7 @@ export async function uploadFiles(postId: string, files: File[]) {
   for (const file of files) {
     const reserved = await supabase!.rpc('reserve_space_attachment', { p_id: postId, p_filename: file.name });
     if (reserved.error) throw reserved.error;
-    const uploaded = await supabase!.storage.from('space-files').upload(reserved.data, file, { contentType: file.type, upsert: false });
+    const uploaded = await supabase!.storage.from('space-files').upload(reserved.data, file, { contentType: acceptedFiles[extensionOf(file.name)], upsert: false });
     if (uploaded.error) {
       // Release the reserved slot on a failed upload. Successful earlier files remain attached.
       await supabase!.rpc('remove_space_attachment', { p_path: reserved.data });
