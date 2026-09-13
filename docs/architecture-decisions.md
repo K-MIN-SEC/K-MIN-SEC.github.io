@@ -9,21 +9,58 @@
 - 두 서비스는 같은 Supabase 프로젝트와 사용자 ID를 사용하되, 초기에는 브라우저 세션을 공유하지 않는다.
 - 공개 Work/Profile/Event/Team Up은 완성된 HTML과 동적 sitemap을 제공한다. 비밀글·회원 전용·Account·Admin은 `noindex`다.
 
+## 서비스 목적
+
+Creator Space는 선배와 동료의 작업을 발견하고, 프로젝트에 참여하고, 확인된 경험을 자신의 다음 포트폴리오로 축적하는 크리에이터 네트워크다. 시간이 지날수록 연도·직군별 Portfolio Archive와 Project Archive가 쌓여 학과의 작업 이력을 후배가 참고할 수 있어야 한다.
+
+```text
+Portfolio 탐색 → Work/Project 발견 → Team Up → 프로젝트 참여
+→ 확인된 Project Experience → 개인 Portfolio 축적 → 다음 참여
+```
+
 ## 회원과 권한
+
+권한을 하나의 등급표로 만들지 않고 서로 독립된 세 축으로 관리한다.
+
+```text
+ACCOUNT          Member
+CREATOR STATUS   Not approved | Creator
+COMMUNITY STAFF  None | Moderator | Owner
+MINSEC CMS       No repository access | GitHub Repository Editor
+```
 
 - Visitor: 공개 콘텐츠 읽기.
 - Member: 기본 프로필 수정, Space 글·댓글 작성, 좋아요, 신고.
-- Creator: Member 권한과 승인된 Works 공개, Team Up/Event 등록.
-- Moderator: 신고 검토.
-- Admin: 전체 관리, 공지, Featured, 권한, 숨김·삭제.
+- Creator: 승인된 Works와 Projects 공개, Team Up과 Event 등록. Moderator나 Owner라고 자동으로 Creator가 되지 않는다.
+- Moderator: 신고 처리, 게시글 숨김·복구, 공지 등록·해제. Creator 콘텐츠를 직접 게시할 권한은 별도 Creator 상태가 있을 때만 가진다.
+- Owner: Moderator 권한과 Creator 승인, Moderator/Owner 지정·해제, Featured 선정, 서비스 운영 설정.
+- GitHub Repository Editor: MINSEC Projects/Play/Devlog/Profile을 편집한다. Supabase의 Creator·Moderator·Owner와 자동 연동하지 않는다.
+- `Admin`은 관리 화면의 이름으로만 사용하고 DB 역할 이름은 `moderator`와 `owner`로 통일한다.
 - 일반 가입은 Google/GitHub OAuth가 우선이다. 이메일+비밀번호 가입은 1차 범위에서 제외한다.
+
+현재 DB에는 `admins.role = owner | moderator`만 구현되어 있다. Creator 상태는 Creator Space migration에서 별도 테이블이나 승인 상태로 추가한다.
+
+## Profile과 연락처
+
+- Profile은 입학년도, 졸업예정년도, 실제 졸업년도, 직군, 관심 분야, 도구, 참여 가능 상태를 저장할 수 있다.
+- 공개 프로필에 표시하는 연락처는 Supabase Auth 이메일과 분리된 사용자 입력값이다.
+- MVP 연락 수단은 Email, Discord, GitHub, X, 개인 사이트로 제한하며 전화번호는 지원하지 않는다.
+- 연락처마다 `public`, `members`, `private` 공개 범위를 둔다. 기본값은 `members` 또는 `private`이며 사용자가 명시적으로 공개한 값만 HTML과 API에 노출한다.
+
+## Works, Projects와 참여 이력
+
+- Work는 프로젝트와 연결되지 않은 개인 작업도 등록할 수 있다.
+- Project는 기간, 분야, 결과물, 참여자, 역할과 연결된 Team Up을 기록하는 중심 객체다.
+- `project_memberships`는 최소한 `project_id`, `user_id`, `role`, `description`, `status`, `invited_by`, `created_at`, `confirmed_at`을 가진다.
+- 참여 상태는 `pending`, `accepted`, `rejected`로 관리한다. 참여자 본인이 확인한 `accepted` 이력만 Project 페이지와 공개 Profile의 Project Experience에 표시한다.
+- 평점과 협업 후기는 MVP에 넣지 않는다. 확인된 객관적 참여 이력만 축적한다.
 
 ## 비밀글과 파일
 
 - 게시글 비밀번호는 계정 비밀번호와 완전히 별개다.
 - 비밀번호 원문은 저장하지 않고 강한 단방향 해시만 비공개 스키마에 저장한다.
 - 본문·댓글·첨부파일 접근은 DB/RLS/RPC에서 검사한다. `noindex`를 보안 수단으로 사용하지 않는다.
-- 작성자와 Admin은 별도 비밀번호 입력 없이 읽을 수 있다.
+- 작성자와 Community Staff는 별도 비밀번호 입력 없이 읽을 수 있다.
 - 비밀글 파일은 private Storage bucket에 저장하며 public URL을 만들지 않는다.
 - 비밀번호 변경 시 기존 열람 권한을 폐기한다. 실패 횟수를 제한한다.
 
@@ -45,7 +82,7 @@
 ## 관리자 경계
 
 - Projects/Play/Devlog CMS는 GitHub 저장소 권한을 사용한다.
-- Community Admin은 Supabase 역할을 사용한다.
+- Community Staff는 Supabase의 Moderator/Owner 역할을 사용한다.
 - 한 Admin 화면에서 두 관리 도구로 이동할 수 있지만 권한은 자동 연동하지 않는다.
 
 ## 단계와 복구
