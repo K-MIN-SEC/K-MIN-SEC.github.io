@@ -1,5 +1,7 @@
 # Creator Space
 
+공개 주소: https://minsec-creator-space.creator-space.workers.dev
+
 MINSEC와 독립적으로 실행하는 Astro SSR 서비스입니다. 공유 Supabase의 Auth·DB를 사용하며 origin 사이 자동 로그인 공유는 하지 않습니다.
 
 ## 실행
@@ -24,9 +26,9 @@ npm run dev
 
 1. Cloudflare 계정 가입·로그인은 사용자 본인이 완료합니다.
 2. 계정 이메일 확인을 마친 뒤 이 디렉터리에서 `npx wrangler login --scopes account:read user:read workers_scripts:write workers:write`으로 배포 계정에 연결합니다. Wrangler는 로그인 유지용 `offline_access`도 요청합니다. Astro 자체 session은 사용하지 않아 별도 KV 저장소는 만들지 않습니다.
-3. `.env.production`의 `PUBLIC_SITE_URL`을 발급받은 HTTPS 서비스 origin으로 설정합니다. 첫 배포에서 아직 주소가 없다면 빈 값으로 두면 요청 origin을 사용합니다. 로컬 개발 주소를 운영 canonical/sitemap에 넣지 마세요. `PUBLIC_GOOGLE_LOGIN=true`, `PUBLIC_SPACE_EXTENDED=true`, `PUBLIC_CREATOR_FOUNDATION=true`도 지정합니다.
+3. `.env`와 `.env.production`의 `PUBLIC_SITE_URL`을 발급받은 HTTPS 서비스 origin으로 설정합니다. Cloudflare 어댑터도 `.env`를 읽으므로 `.env.production`만 변경하고 `.env`에 로컬 주소를 남기지 마세요. `PUBLIC_GOOGLE_LOGIN=true`, `PUBLIC_SPACE_EXTENDED=true`, `PUBLIC_CREATOR_FOUNDATION=true`도 지정합니다.
 4. `npm run build` 후 `npm run deploy`를 실행합니다. Cloudflare 어댑터가 만드는 배포 설정을 Wrangler가 사용합니다.
-5. Supabase Authentication URL Configuration에 `https://발급주소/account/`와 로컬 검증용 `http://127.0.0.1:4322/account/`를 Redirect URL로 추가합니다. MINSEC Site URL과 기존 redirect는 유지합니다.
+5. Supabase Authentication URL Configuration에 `https://발급주소/account/`를 Redirect URL로 추가합니다. MINSEC Site URL과 기존 redirect는 유지합니다. 현재 사용자 결정에 따라 로컬 4322 로그인 복귀는 허용하지 않습니다.
 6. GitHub Actions variable `CREATOR_SPACE_URL`에 새 origin을 등록하고 MINSEC Pages를 재배포하면 Community 링크가 새 서비스로 이동합니다.
 
 서버 service-role 키는 사용하지 않습니다. SSR은 공개 키+RLS로 공개 HTML만 생성합니다. 비공개·회원전용 응답은 noindex이며 모든 페이지를 no-store로 처리합니다. `/sitemap.xml`은 public 데이터만 500개 단위로 나누어 제공합니다.

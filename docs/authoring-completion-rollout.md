@@ -27,6 +27,7 @@
 - 2026-09-13 사용자 승인 후 SQL Editor 전체 원문을 0009와 대조하고 운영 DB 적용 완료. `verify-live-public.mjs`에서 0004–0009 테이블/RPC, 익명 쓰기 거부, 비공개 Creator 조회 차단, 존재하지 않는 Registry 대상 접근 거부를 검증했다.
 - GitHub 편집 OAuth와 저장 왕복 QA 완료. 기존 프로젝트 내용 저장으로 `f3ba31f` 커밋 생성, Build and verify #23 및 Publish GitHub Pages #19 성공 확인. 저장 시 선택적 이미지/영상 필드 기본값만 추가되었고 소개 문구는 바뀌지 않았다.
 - Cloudflare 계정과 Wrangler 연결 완료. 사용자가 계정·사용자 읽기, Workers 쓰기, 로그인 유지 권한을 승인했다. 불필요한 Astro session KV 생성은 `session:false`로 비활성화했다.
-- Cloudflare 실제 배포는 아직 미완료: 파일 업로드 후 이메일 미인증 오류 `10034`로 중단됐다. 사용자의 이메일 확인 후 동일 빌드를 배포하고 실제 origin, Supabase redirect, MINSEC Community 링크를 연결해야 한다.
+- Cloudflare 배포 완료: https://minsec-creator-space.creator-space.workers.dev (공개 주소 보정 버전 `0dc1dd8c-3c97-4d2e-a60d-0c9b88e9169b`). 주요 공개/관리 화면, sitemap, robots 12개 경로 HTTP 200, 관리 화면 noindex, canonical/OG/JSON-LD의 공개 origin을 검증했다.
+- 사용자 승인에 따라 Supabase에는 공개 `/account/` 복귀 주소만 추가했다. 로컬 4322는 추가하지 않았다. 공개 서비스 GitHub 로그인 완료 및 기존 동일 계정의 운영자 메뉴를 확인했다. GitHub `CREATOR_SPACE_URL` variable에 공개 origin을 저장했다.
 - 로컬 Cloudflare 개발 서버의 지연 의존성 탐색이 SSR 캐시를 교체해 시작 실패하는 문제를 사전 번들 목록으로 해결했다. 새 서버 시작 후 Home/Works/Projects/사람들/Team Up/Events/Studio/Account/Admin와 sitemap의 HTTP 200 및 비공개 관리 화면 noindex를 확인했다.
 - 별도 Member 계정의 Creator CRUD·참여 확인·비밀글 해제에 대한 실제 브라우저 QA는 남아 있다. 로컬 DB 역할 테스트와 실제 사용자 간 검증을 구분한다.

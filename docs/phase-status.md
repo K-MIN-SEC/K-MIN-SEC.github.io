@@ -47,7 +47,7 @@
 - 결과: 별도 Astro server 서비스, 공유 Supabase Auth/DB, origin별 세션, 공개 SSR, 비밀 캐시 방지, 동적 sitemap, 점진적 이전·복구 설계 작성.
 - 기반 적용: `0008_creator_foundation.sql`을 실제 Supabase에 적용했다. Creator 상태는 Community Staff와 독립이며, Profile 연락처 공개범위와 확인형 Project Experience 구조를 포함한다.
 - 임시 UI: MINSEC Account에서 Profile 저장·연락처·Creator 신청을 제공하고, Owner Admin에서 Creator 승인·반려·해제를 제공한다. Creator Space 분리 후 해당 서비스로 옮긴다.
-- 실제 앱: `apps/creator-space`에 독립 package/config의 Astro SSR 앱을 만들었다. Works/Projects/Team Up/Events 목록·검색·작성·편집·삭제, Profile, 참여 확인, 운영 화면과 동적 sitemap을 포함한다. Cloudflare 계정·배포 도구 연결은 완료했고 이메일 확인을 기다린다.
+- 실제 앱: `apps/creator-space`의 독립 Astro SSR 앱을 https://minsec-creator-space.creator-space.workers.dev 에 배포했다. 주요 12개 경로, 검색 메타데이터, 계정 화면 noindex와 실제 GitHub 로그인을 검증했다.
 - Migration: 0008–0009 적용 완료. 0009는 새 콘텐츠/반응 테이블, 프로젝트 컬럼, Space Registry 동기화 trigger를 추가하며 기존 게시글을 삭제하지 않는다.
 - 문서: `docs/creator-space-separation.md`.
 
@@ -55,7 +55,7 @@
 
 1. 0009는 사용자 승인 후 운영 적용 및 공개 접근 제한 검증을 완료했다.
 2. 공개 MINSEC 편집기의 GitHub 동의와 저장→커밋→Pages 배포 왕복을 완료했다 (`f3ba31f`).
-3. Cloudflare 가입·Wrangler 연결 완료. 계정 이메일 미인증 오류 10034 해결 후 Creator Space 배포와 Supabase redirect 추가가 필요하다.
+3. Cloudflare 배포와 공개 Supabase redirect 추가 완료. 사용자 결정에 따라 로컬 4322 redirect는 추가하지 않았다. MINSEC Community 연결 variable 저장 완료.
 4. 별도 Member 계정으로 Creator 승인·작업 CRUD·참여 확인·비밀글/첨부를 실제 QA한다.
 5. Registry는 새 Creator 반응에 적용하며 기존 Space 반응은 기존 API를 유지한다. 기존 반응/정적 MINSEC 대상 전체 전환과 Turnstile·파일 검역은 추가 작업이다.
 

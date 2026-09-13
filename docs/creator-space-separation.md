@@ -1,6 +1,8 @@
 # Creator Space 분리 설계
 
-상태: **별도 SSR 앱 구현·로컬 실행·0009 운영 적용 완료 — Cloudflare 계정 이메일 확인 후 원격 배포 예정**
+상태: **별도 SSR 앱 공개 배포·0009 운영 적용·GitHub 로그인 확인 완료**
+
+공개 주소: https://minsec-creator-space.creator-space.workers.dev
 
 ## 제품 목적
 
