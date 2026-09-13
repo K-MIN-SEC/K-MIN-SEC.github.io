@@ -38,7 +38,7 @@
 ## D. 공통 반응 모델
 
 - 결과: Registry/v2 구조, 댓글 대상 등록, 권한 함수, 백필·검증·이중 기록·전환·복구 계획 작성.
-- 실제 구현/적용: 없음.
+- 실제 구현/적용: 0009에서 새 Creator 반응용 Registry FK 구조를 운영 DB에 적용했다. 기존 Space 반응과 정적 MINSEC 대상 전체 이전은 아직 수행하지 않았다.
 - Migration: 실행 파일을 만들기 전에 보존 기간과 정적 콘텐츠 동기화 인증 방식을 결정해야 함.
 - 문서: `docs/content-target-registry-migration.md`.
 
@@ -47,15 +47,15 @@
 - 결과: 별도 Astro server 서비스, 공유 Supabase Auth/DB, origin별 세션, 공개 SSR, 비밀 캐시 방지, 동적 sitemap, 점진적 이전·복구 설계 작성.
 - 기반 적용: `0008_creator_foundation.sql`을 실제 Supabase에 적용했다. Creator 상태는 Community Staff와 독립이며, Profile 연락처 공개범위와 확인형 Project Experience 구조를 포함한다.
 - 임시 UI: MINSEC Account에서 Profile 저장·연락처·Creator 신청을 제공하고, Owner Admin에서 Creator 승인·반려·해제를 제공한다. Creator Space 분리 후 해당 서비스로 옮긴다.
-- 실제 앱: `apps/creator-space`에 독립 package/config의 Astro SSR 앱을 만들었다. Works/Projects/Team Up/Events 목록·검색·작성·편집·삭제, Profile, 참여 확인, 운영 화면과 동적 sitemap을 포함한다. 원격 Cloudflare 배포는 계정 가입 대기다.
-- Migration: 0008 적용 완료. 기존 MINSEC/Space 테이블 변경 없음.
+- 실제 앱: `apps/creator-space`에 독립 package/config의 Astro SSR 앱을 만들었다. Works/Projects/Team Up/Events 목록·검색·작성·편집·삭제, Profile, 참여 확인, 운영 화면과 동적 sitemap을 포함한다. Cloudflare 계정·배포 도구 연결은 완료했고 이메일 확인을 기다린다.
+- Migration: 0008–0009 적용 완료. 0009는 새 콘텐츠/반응 테이블, 프로젝트 컬럼, Space Registry 동기화 trigger를 추가하며 기존 게시글을 삭제하지 않는다.
 - 문서: `docs/creator-space-separation.md`.
 
 ## 남은 순서
 
-1. 자동 승인 검토가 거절한 0009 운영 적용에 대해 사용자의 명시적 승인을 받는다. 로컬 DB 테스트는 통과했으며 실제 적용 완료로 간주하지 않는다.
-2. 공개 MINSEC 편집기에서 사용자 GitHub public_repo 동의 후 저장→커밋→배포 왕복을 QA한다.
-3. Cloudflare 가입·로그인 후 Creator Space를 배포하고 Supabase redirect를 추가한다.
+1. 0009는 사용자 승인 후 운영 적용 및 공개 접근 제한 검증을 완료했다.
+2. 공개 MINSEC 편집기의 GitHub 동의와 저장→커밋→Pages 배포 왕복을 완료했다 (`f3ba31f`).
+3. Cloudflare 가입·Wrangler 연결 완료. 계정 이메일 미인증 오류 10034 해결 후 Creator Space 배포와 Supabase redirect 추가가 필요하다.
 4. 별도 Member 계정으로 Creator 승인·작업 CRUD·참여 확인·비밀글/첨부를 실제 QA한다.
 5. Registry는 새 Creator 반응에 적용하며 기존 Space 반응은 기존 API를 유지한다. 기존 반응/정적 MINSEC 대상 전체 전환과 Turnstile·파일 검역은 추가 작업이다.
 

@@ -9,7 +9,8 @@ assert.ok(env.PUBLIC_SUPABASE_URL && env.PUBLIC_SUPABASE_ANON_KEY, 'Supabase pub
 const db = createClient(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 
 for (const table of ['project_likes', 'project_comments', 'space_posts', 'space_likes', 'space_comments', 'space_attachments',
-  'member_profiles', 'profile_contacts', 'creator_projects', 'project_memberships']) {
+  'member_profiles', 'profile_contacts', 'creator_projects', 'project_memberships',
+  'creator_entries', 'content_targets', 'target_comments', 'target_reactions', 'target_reports']) {
   const result = await db.from(table).select('*', { count: 'exact', head: true });
   assert.equal(result.error, null, `${table}: public read should be available`);
 }
@@ -32,4 +33,14 @@ assert.ok(creatorWrite.error, 'anonymous visitors must not create Creator projec
 const creatorState = await db.rpc('is_creator', { p_user_id: fake });
 assert.equal(creatorState.error, null, 'is_creator: public capability check should be available');
 assert.equal(creatorState.data, false, 'unknown users must not have Creator capability');
-console.log('Passed: live 0004–0008 reads/RPC, private admin membership, and rejected anonymous community/Creator writes.');
+const targetRead = await db.rpc('can_read_content_target', { p_id: fake });
+assert.equal(targetRead.error, null, 'registry access RPC must exist');
+assert.equal(targetRead.data, false, 'nonexistent registry targets must not be readable');
+const entryWrite = await db.rpc('save_creator_entry', { p_data: {kind: 'work', title: 'Blocked', summary: 'Anonymous work must fail.'} });
+assert.ok(entryWrite.error, 'anonymous visitors must not create works');
+const commentWrite = await db.rpc('write_target_comment', {p_target: fake, p_body: 'Anonymous comment must fail.'});
+assert.ok(commentWrite.error, 'anonymous visitors must not write registry comments');
+const privateRows = await db.from('creator_entries').select('id').neq('visibility', 'public');
+assert.equal(privateRows.error, null);
+assert.deepEqual(privateRows.data, [], 'anonymous visitors must not see non-public Creator entries');
+console.log('Passed: live 0004–0009 reads/RPC, private admin membership, rejected anonymous writes, and non-public Creator filtering.');
