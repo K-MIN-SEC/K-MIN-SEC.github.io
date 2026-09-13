@@ -10,7 +10,7 @@
 - 완료: GitHub OAuth 앱 발급, Supabase 공급자 연결, 공개 사이트에서 GitHub 승인 화면 진입 확인.
 - 미완료: Google OAuth 공급자 앱 발급·연결, Analytics 공급자 연결.
 - Migration: 없음.
-- 환경값: `PUBLIC_EMAIL_LOGIN=false`, `PUBLIC_SPACE_EXTENDED=false`.
+- 환경값: `PUBLIC_EMAIL_LOGIN=false`. 숨겨진 QA 경로에서 `PUBLIC_SPACE_EXTENDED=true`로 실제 검증한다.
 - QA: 기본/확장 모드 Astro build와 정적 페이지 검증 통과.
 - rollback: 커밋 `e039d3e`를 되돌리거나 두 feature flag를 false로 유지.
 
@@ -28,7 +28,7 @@
 - 로컬 QA: migrations 0001–0004 순차 적용, 기존 공개 글 호환, RLS/RPC와 파일 접근 검증 통과.
 - 실제 적용: `supabase/migrations/0004_private_posts_files_notices.sql` 적용 완료. 공개 0004 컬럼/RPC 조회, Admin 목록 비공개, 익명 쓰기·신고 거부 확인.
 - 미완료: 로그인 Member의 실제 비밀글·댓글·좋아요와 Storage 업로드 왕복 QA.
-- 환경값: 실제 QA 성공 후 `PUBLIC_SPACE_EXTENDED=true`.
+- 환경값: 공개 메뉴에 노출되지 않는 `/space/` QA 경로에 `PUBLIC_SPACE_EXTENDED=true` 적용.
 - rollback: `docs/space-0004-rollout.md` 참고. 비밀 데이터 생성 후 공개 RLS로 역행 금지.
 
 ## D. 공통 반응 모델
