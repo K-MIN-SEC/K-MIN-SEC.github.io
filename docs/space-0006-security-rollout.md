@@ -1,6 +1,6 @@
 # 0006 보안·운영 권한 적용 계획
 
-상태: 로컬 검증 완료, 실제 Supabase 적용 대기
+상태: 실제 Supabase 0006·0007 적용 및 GitHub Pages 배포 완료
 
 `0006_security_roles_limits_files.sql`과 `0007_lock_direct_community_writes.sql`은 기존 데이터를 삭제하지 않는 단계별 migration이다. 기존 `admins` 행은 첫 적용 시 `owner`가 되며, 이후 추가되는 관리자는 기본 `moderator`다.
 
@@ -18,16 +18,16 @@
 
 Supabase Auth 자체의 로그인 제한은 별개다. Cloudflare Turnstile과 IP 기반 제한은 Creator Space 서버 배포 단계에서 추가한다. 정적 브라우저 코드만으로 Turnstile 비밀키 검증을 구현하지 않는다.
 
-## 적용 순서
+## 적용 결과
 
-1. 로컬 `node scripts/test-community.mjs`가 통과하는지 확인한다.
-2. 실제 DB 백업 또는 필요한 테이블 내보내기를 만든다.
-3. SQL Editor에서 `0006_security_roles_limits_files.sql` 전체를 한 번 실행한다. 이 단계는 기존 쓰기 권한을 유지하므로 현재 사이트가 계속 동작한다.
-4. 새 RPC를 사용하는 사이트 코드를 배포한다.
-5. SQL Editor에서 `0007_lock_direct_community_writes.sql`을 실행해 우회 가능한 직접 쓰기를 닫는다.
-6. `npm run verify:live-public`으로 비회원 쓰기 거부를 확인한다.
-7. Owner 계정으로 Admin 화면의 역할 목록과 운영자 지정 UI를 확인한다.
-8. Member 계정으로 글·댓글·좋아요·신고·허용 문서 업로드를 확인한다.
+1. 로컬 migration 검사와 Astro build를 통과했다.
+2. SQL Editor에서 `0006_security_roles_limits_files.sql`을 적용했다.
+3. 새 RPC를 사용하는 사이트 클라이언트를 배포했다.
+4. `0007_lock_direct_community_writes.sql`을 적용해 직접 쓰기 우회 경로를 닫았다.
+5. 공개 배포에서 비회원 조회와 쓰기 거부를 재검증했다.
+6. Owner 계정의 Admin 역할 관리 화면을 확인했다.
+
+별도 Member 계정을 이용한 전체 브라우저 왕복 QA는 남아 있다. 글·댓글·좋아요·신고·허용 문서 업로드를 실제 사용자 흐름으로 확인한다.
 
 ## 복구
 
