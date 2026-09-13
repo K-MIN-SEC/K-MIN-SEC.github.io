@@ -33,6 +33,8 @@ jobs:
           PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
           PUBLIC_CMS_AUTH_URL: ${{ vars.PUBLIC_CMS_AUTH_URL }}
+          PUBLIC_GITHUB_LOGIN: true
+          PUBLIC_GOOGLE_LOGIN: false
       - run: npm run verify
       - run: node scripts/test-community.mjs
       - uses: actions/upload-pages-artifact@v4
