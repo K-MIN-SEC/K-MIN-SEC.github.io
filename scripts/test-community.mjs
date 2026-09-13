@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 const db = new PGlite({ extensions: { pgcrypto } });
 await db.exec(`create role anon; create role authenticated;
-create schema auth; create table auth.users(id uuid primary key);
+create schema auth; create table auth.users(id uuid primary key,email text unique);
 create schema extensions; create extension pgcrypto with schema extensions;
 create schema storage;
 create table storage.buckets(id text primary key,name text not null,public boolean not null default false,file_size_limit bigint,allowed_mime_types text[]);
@@ -21,7 +21,7 @@ const owner = '11111111-1111-4111-8111-111111111111';
 const other = '22222222-2222-4222-8222-222222222222';
 const admin = '33333333-3333-4333-8333-333333333333';
 const reader = '55555555-5555-4555-8555-555555555555';
-await db.query('insert into auth.users values ($1),($2),($3),($4)', [owner, other, admin, reader]);
+await db.query('insert into auth.users(id,email) values ($1,$5),($2,$6),($3,$7),($4,$8)', [owner, other, admin, reader, 'owner@example.com', 'other@example.com', 'admin@example.com', 'reader@example.com']);
 await db.query('insert into public.admins(user_id) values ($1)', [admin]);
 async function asUser(id, anonymous = false) {
   await db.exec('reset role');
@@ -59,13 +59,26 @@ try {
   await db.exec('reset role');
   await db.exec(readFileSync('supabase/migrations/0004_private_posts_files_notices.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/0005_storage_api_cleanup.sql', 'utf8'));
+  await db.exec(readFileSync('supabase/migrations/0006_security_roles_limits_files.sql', 'utf8'));
+  await db.exec(readFileSync('supabase/migrations/0007_lock_direct_community_writes.sql', 'utf8'));
   assert.equal((await db.query("select count(*)::int count from pg_trigger where tgname='delete_space_object_after_metadata'")).rows[0].count, 0);
+  await asUser(admin);
+  assert.equal((await db.query('select public.is_owner() owner')).rows[0].owner, true);
+  await db.query('select public.grant_community_admin($1,$2)', ['other@example.com', 'moderator']);
+  await asUser(other);
+  assert.equal((await db.query('select public.is_admin() admin')).rows[0].admin, true);
+  assert.equal((await db.query('select public.is_owner() owner')).rows[0].owner, false);
+  await assert.rejects(db.query('select public.grant_community_admin($1,$2)', ['reader@example.com', 'moderator']), /Owner access required/);
+  await asUser(admin); await db.query('select public.revoke_community_admin($1)', [other]);
+  await asUser(owner);
+  await assert.rejects(db.query('insert into project_comments(user_id,project_id,display_name,body) values ($1,$2,$3,$4)', [owner,'erase','테스터','직접 쓰기 우회']), /permission denied/);
   await asUser(null); assert.equal((await db.query('select id from space_posts where id=$1',[post])).rows.length,1);
 
   // Secret posts stay out of the public feed. A direct shared id reveals only a locked summary.
   await asUser(owner);
   const secret = (await db.query('select public.create_space_post($1,$2,$3,$4,$5) id', ['테스터','비밀 제목','비밀 본문',null,'separate-post-password'])).rows[0].id;
-  const secretComment = (await db.query('insert into space_comments(user_id,post_id,display_name,body) values ($1,$2,$3,$4) returning id', [owner,secret,'테스터','비밀 답글'])).rows[0].id;
+  const secretComment = (await db.query('select public.create_space_comment($1,$2,$3) id', [secret,'테스터','비밀 답글'])).rows[0].id;
+  await assert.rejects(db.query('select public.reserve_space_attachment($1,$2)',[secret,'unsafe.zip']), /문서만 첨부/);
   const objectPath = (await db.query('select public.reserve_space_attachment($1,$2) path',[secret,'secret.pdf'])).rows[0].path;
   await db.query('insert into storage.objects(bucket_id,name,owner_id) values ($1,$2,$3)',['space-files',objectPath,owner]);
   await asUser(null);
@@ -94,12 +107,11 @@ try {
   await db.query('delete from space_posts where id=$1',[secret]);
   assert.equal((await db.query('select name from storage.objects where name=$1',[objectPath])).rows.length,0);
   await asUser(other);
-  const report = '44444444-4444-4444-8444-444444444444';
-  await db.query('insert into reports(id,user_id,target_type,target_id,reason) values ($1,$2,$3,$4,$5)', [report, other, 'space_post', post, 'spam']);
+  const report = (await db.query('select public.create_community_report($1,$2,$3) id', ['space_post', post, 'spam'])).rows[0].id;
   await assert.rejects(db.query('select moderate_report($1,$2)', [report, 'hide']), /Admin access required/);
   await asUser(admin); await db.query('select moderate_report($1,$2)', [report, 'hide']);
   assert.equal((await db.query('select status from reports where id=$1', [report])).rows[0].status, 'resolved');
   await db.query('delete from space_posts where id=$1', [post]);
   assert.equal((await db.query('select id from space_comments where id=$1', [reply])).rows.length, 0);
-  console.log('Passed: migrations 0001–0005, account permissions, moderation, secret post isolation/unlock/rotation, notices, private file RLS and Storage API cleanup.');
+  console.log('Passed: migrations 0001–0007, account roles, protected writes and limits, moderation, secret post isolation, and private file rules.');
 } finally { await db.close(); }

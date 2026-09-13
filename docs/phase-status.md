@@ -22,6 +22,7 @@
 - Migration: 없음.
 - 시험 명령: `npm run verify:live-public`.
 - rollback: 데이터 생성 없는 검사이며 복구 작업 없음. 이후 시험 콘텐츠는 명확한 QA 표식을 붙이고 정리.
+- 보안 보강 대기: `0006_security_roles_limits_files.sql` 로컬 검증 완료. Owner/Moderator 분리, DB 쓰기 제한, 신고 대상 검증, ZIP 차단과 문서 형식 허용을 포함한다.
 
 ## C. 비밀글 / 첨부 / 공지
 
@@ -50,6 +51,8 @@
 
 ## 남은 순서
 
-1. 별도 Member 계정으로 비밀글 비밀번호 해제 QA를 수행한다.
-2. 개인 사이트에서는 Space QA 경로를 계속 숨기고, Creator Space 별도 서비스에서만 확장 UI를 공개한다.
-3. Creator Space 배포 전 해당 서비스 환경에 `PUBLIC_SPACE_EXTENDED=true`를 설정한다.
+1. 실제 Supabase에 0006을 적용한 뒤 새 클라이언트를 배포한다.
+2. Owner 화면에서 운영자 지정/해제와 권한 경계를 확인한다.
+3. 별도 Member 계정으로 비밀글 비밀번호 해제와 허용 문서 업로드를 QA한다.
+4. Content Target Registry migration을 구현하고 기존 반응을 대조한다.
+5. Creator Space 서버에서 Turnstile, IP 제한, 파일 격리/검사를 연결한다.
