@@ -28,7 +28,10 @@
           "title": "Combat에서 Challenge로",
           "body": "이 Combat Mode는 향후 Challenge와 Boss Rush의 기반으로도 사용할 예정입니다. 웹 데모는 핵심 전투를 짧게 체험하는 별도 빌드로 준비하며, 현재 공개된 플레이 빌드는 없습니다."
         }
-      ]
+      ],
+      "coverImage": null,
+      "coverAlt": null,
+      "videos": []
     },
     {
       "id": "local-character-ai",
@@ -59,7 +62,10 @@
           "title": "웹에서는 경험을 작게 전달합니다",
           "body": "데스크톱 실행 환경을 그대로 옮기기보다, 향후 대화 흐름과 기억의 역할을 보여주는 웹용 시뮬레이션을 검토합니다. 현재 웹에서 실행되는 AI 데모는 제공하지 않습니다."
         }
-      ]
+      ],
+      "coverImage": null,
+      "coverAlt": null,
+      "videos": []
     },
     {
       "id": "object-head-battle",
@@ -85,7 +91,10 @@
           "title": "공개할 경험의 범위",
           "body": "향후 로컬 1인 플레이나 더미 상대 샌드박스처럼 작게 체험할 수 있는 형식을 검토합니다. 현재 공개 플레이 빌드는 없습니다."
         }
-      ]
+      ],
+      "coverImage": null,
+      "coverAlt": null,
+      "videos": []
     },
     {
       "id": "erase",
@@ -111,7 +120,10 @@
           "title": "웹 데모 준비",
           "body": "웹 데모는 핵심 스테이지 1개를 목표로 준비합니다. 현재는 Play 페이지에서 준비 상태만 확인할 수 있습니다."
         }
-      ]
+      ],
+      "coverImage": null,
+      "coverAlt": null,
+      "videos": []
     }
   ]
 }
