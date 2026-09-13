@@ -29,10 +29,10 @@ Example replacement entry:
 }
 ```
 
-Only the active video plays, muted and inline. GIFs use posters while paused or
-inactive. Slides start rotating automatically on entry. Reduced-motion CSS disables
+Only the active video plays, muted and inline. GIFs use posters while inactive. Slides start rotating automatically on entry. Reduced-motion CSS disables
 the crossfade transition but does not stop the requested automatic rotation.
-The pause button stops rotation and active media. Background tabs stop playback.
+There is no pause/play control, as requested. Rotation continues while the page
+is visible. Selecting a slide restarts its timer. Background tabs stop playback.
 Default images are AI-generated cutouts, not actual community project works.
 Image colors are unchanged; dimming and edge blending are CSS display effects.
 
@@ -41,7 +41,7 @@ Worker. No profile, community or database data changes are involved.
 
 
 QA: production build passed (0 errors/warnings; existing 3 deprecation hints).
-Browser checked manual selection, automatic slide advance, pause/restart,
+Browser checked manual selection and automatic slide advance,
 mobile layout with no horizontal
 page overflow, and all four deployed images loaded successfully. Default four
 WebP cutouts total about 386 KiB and retain alpha. GIF/video branches are ready

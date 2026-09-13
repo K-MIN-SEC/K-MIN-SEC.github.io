@@ -6,9 +6,9 @@
 
 ## 제품 목적
 
-Creator Space는 선배와 동료의 작업을 보고, 프로젝트에 참여하고, 확인된 경험을 자신의 다음 포트폴리오로 만드는 크리에이터 네트워크다. 커뮤니티의 규모보다 `Team Up → Project → Result → Portfolio` 흐름이 실제로 한 번 완성되는 것을 첫 성공 조건으로 삼는다.
+Creator Space는 다양한 창작자의 작업을 보고, 프로젝트에 참여하고, 확인된 경험을 자신의 다음 포트폴리오로 만드는 크리에이터 네트워크다. 커뮤니티의 규모보다 `Team Up → Project → Result → Portfolio` 흐름이 실제로 한 번 완성되는 것을 첫 성공 조건으로 삼는다.
 
-장기적으로 연도·직군별 Portfolio Archive와 Project Archive를 제공해 학생이 선배의 작업 수준, 졸업작품과 준비 직군을 찾아볼 수 있게 한다.
+초기에는 학과를 시작점으로 삼되, 학과 → 지인 → 타학교 → 더 넓은 창작자 커뮤니티로 확장한다. 학교·학과는 선택 정보이며 서비스 이용 자격이 아니다. 장기적으로 직군·작업·프로젝트 경험 중심의 Portfolio Archive와 Project Archive를 제공한다.
 
 ## 배포 단위
 
@@ -65,7 +65,7 @@ MINSEC CMS       No repository access | GitHub Repository Editor
 
 ## Profile과 연락처
 
-Profile은 입학년도, 졸업예정년도와 실제 졸업년도, 직군, 관심 분야, 사용 도구, 프로젝트 참여 가능 상태를 제공한다. 사용자가 등록한 Works와 확인된 Project Experience를 함께 보여준다.
+Profile은 소개, 직군, 관심 분야, 사용 도구, 프로젝트 참여 상태를 제공한다. 학교 정보는 선택 입력이며 입학·졸업 연도는 저장만 유지하고 프로필에 노출하지 않는다. 사용자가 등록한 Works와 확인된 Project Experience를 함께 보여준다.
 
 연락처는 Auth 이메일과 분리해 사용자가 직접 입력한다. MVP는 Email, Discord, GitHub, X, 개인 사이트를 지원하고 전화번호는 지원하지 않는다. 연락처마다 `public`, `members`, `private` 공개 범위를 둔다. 사용자가 명시적으로 허용한 값만 HTML과 API에 노출한다.
 
@@ -98,7 +98,7 @@ project_memberships
 
 bucket 후보는 `avatars`, `work-media`, `work-files`, `post-attachments`다. public asset도 업로드 권한은 소유자 RPC/정책으로 제한한다. 비밀 콘텐츠 파일은 private bucket과 RLS를 사용하며 public URL을 만들지 않는다. 영상·게임 빌드·원본 제작 파일은 외부 호스팅 링크를 사용한다.
 
-문서 첨부는 브라우저에서 실행하거나 임의 라이브러리로 렌더링하지 않고 다운로드로 제공한다. 이미지와 PDF만 별도 검증 후 미리보기를 고려한다. 학과 전체 서비스 전에는 업로드 격리 또는 악성 파일 검사를 추가한다.
+문서 첨부는 브라우저에서 실행하거나 임의 라이브러리로 렌더링하지 않고 다운로드로 제공한다. 이미지와 PDF만 별도 검증 후 미리보기를 고려한다. 외부 커뮤니티로 서비스를 확대하기 전에는 업로드 격리 또는 악성 파일 검사를 추가한다.
 
 ## 분리 순서와 rollback
 

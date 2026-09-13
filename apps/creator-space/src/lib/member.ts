@@ -19,17 +19,16 @@ async function hydrate() {
   get("edit").hidden=p.user_id!==session.data.session.user.id;
   const details=profileSummary(p);
   get("facts").hidden=false;
-  for(const key of ['years','availability'] as const){get(key).textContent=details[key];get(key).hidden=!details[key];}
+  get('availability').textContent=details.availability;get('availability').hidden=!details.availability;get('availability').dataset.state=details.availabilityState;
+  get('role').textContent=details.role;get('role').hidden=!details.role;
   for(const key of ['interests','tools'] as const){
     const tags=details[key];get(key).replaceChildren();
     for(const tag of tags){const chip=document.createElement('span');chip.className='profile-tag';chip.textContent=tag;get(key).append(chip);}
     if(!tags.length){const empty=document.createElement('p');empty.className='profile-empty';empty.textContent=key==='interests'?'등록한 관심 분야가 없습니다.':'등록한 도구가 없습니다.';get(key).append(empty);}
   }
   get("name").textContent = p.display_name;
-  get("bio").textContent = p.bio;
-  get("meta").textContent = [p.school_name, p.department_name, p.primary_role]
-    .filter(Boolean)
-    .join(" · ");
+  get("bio").textContent = p.bio;get("bio").hidden=!p.bio;
+  get("meta").textContent = details.affiliation;get("meta").hidden=!details.affiliation;
   get("status").textContent =
     p.visibility === "public" ? "" : p.visibility === "private" ? "나만 볼 수 있는 비공개 프로필입니다." : "회원에게 공개된 프로필입니다.";
   const [contacts, works, members] = await Promise.all([
@@ -51,6 +50,7 @@ async function hydrate() {
       .eq("status", "accepted"),
   ]);
   for (const e of [contacts.error, works.error, members.error]) if (e) throw e;
+  get("contact-section").hidden=!contacts.data?.length;
   get("contacts").replaceChildren();
   for (const c of contacts.data || []) {
     const row = document.createElement("p");

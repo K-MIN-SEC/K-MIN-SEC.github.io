@@ -10,7 +10,6 @@ import {heroSlides as slides} from '../data/hero-slides';
   <div class="creator-visual-caption"><span class="eyebrow">MADE OF POSSIBILITIES</span><p data-visual-caption>{slides[0].caption}</p><a data-visual-link href={slides[0].href} hidden={!slides[0].href}>프로젝트 보기 ↗</a></div>
   <div class="creator-visual-controls" aria-label="창작 이미지 선택">
     {slides.map((slide,i)=><button type="button" data-visual-select data-caption={slide.caption} data-href={slide.href} aria-pressed={i===0}>{slide.label}</button>)}
-    <button type="button" data-visual-pause aria-label="미디어 자동 재생 멈추기">멈춤</button>
   </div>
 </div>}
 <script>
@@ -18,19 +17,17 @@ import {heroSlides as slides} from '../data/hero-slides';
   if(root){
     const slides=[...root.querySelectorAll<HTMLElement>('[data-visual-slide]')];
     const buttons=[...root.querySelectorAll<HTMLButtonElement>('[data-visual-select]')];
-    const pause=root.querySelector<HTMLButtonElement>('[data-visual-pause]')!;
     const caption=root.querySelector<HTMLElement>('[data-visual-caption]')!;
     const link=root.querySelector<HTMLAnchorElement>('[data-visual-link]')!;
-    let current=0,paused=false,timer:ReturnType<typeof setTimeout>|undefined;
+    let current=0,timer:ReturnType<typeof setTimeout>|undefined;
     const media=()=>slides.forEach((slide,i)=>{
-      const active=i===current&&!paused&&!document.hidden;
+      const active=i===current&&!document.hidden;
       const video=slide.querySelector('video');if(video){if(active){video.muted=true;void video.play().catch(()=>{});}else video.pause();}
       const gif=slide.querySelector<HTMLImageElement>('[data-gif]');if(gif)gif.src=(active?gif.dataset.gif:gif.dataset.poster)!;
     });
-    const schedule=()=>{clearTimeout(timer);media();if(!paused&&!document.hidden&&slides.length>1)timer=setTimeout(()=>{show((current+1)%slides.length);schedule();},Math.max(3000,Number(slides[current].dataset.duration)||6500));pause.textContent=paused?'재생':'멈춤';pause.setAttribute('aria-label',paused?'미디어 자동 재생 시작':'미디어 자동 재생 멈추기');};
+    const schedule=()=>{clearTimeout(timer);media();if(!document.hidden&&slides.length>1)timer=setTimeout(()=>{show((current+1)%slides.length);schedule();},Math.max(3000,Number(slides[current].dataset.duration)||6500));};
     const show=(index:number)=>{current=index;slides.forEach((slide,i)=>slide.classList.toggle('is-active',i===index));buttons.forEach((b,i)=>b.setAttribute('aria-pressed',String(i===index)));caption.textContent=buttons[index].dataset.caption!;link.hidden=!buttons[index].dataset.href;if(!link.hidden)link.href=buttons[index].dataset.href!;else link.removeAttribute('href');};
     buttons.forEach((b,i)=>b.addEventListener('click',()=>{show(i);schedule();}));
-    pause.addEventListener('click',()=>{paused=!paused;schedule();});
     document.addEventListener('visibilitychange',schedule);
     window.addEventListener('pagehide',()=>{clearTimeout(timer);slides.forEach(s=>s.querySelector('video')?.pause());});schedule();
   }

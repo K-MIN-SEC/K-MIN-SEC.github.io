@@ -11,14 +11,14 @@ const tools=[['Unity','유니티 (Unity)'],['Unreal Engine','언리얼 엔진'],
     <form class="profile-editor" data-profile-form hidden={section!=='profile'}>
       <div class="form-row"><label>프로필 주소 ID<input name="handle" required minlength="3" maxlength="30" pattern="[a-z0-9][a-z0-9_-]{2,29}" placeholder="minsec" /><small>프로필 주소에 사용합니다. 영문 소문자·숫자·밑줄·하이픈, 3~30자</small></label><label>표시 이름<input name="display_name" required maxlength="50" /></label></div>
       <label>소개<textarea name="bio" rows="4" maxlength="1000" placeholder="어떤 작업을 만드는지 소개해 주세요."></textarea></label>
-      <div class="form-row"><label>학교<input name="school_name" maxlength="100" /></label><label>학과<input name="department_name" maxlength="100" /></label></div>
-      <div class="profile-year-row"><label>입학년도<input name="admission_year" type="number" min="2000" max="2100" /></label><label>졸업예정년도<input name="expected_graduation_year" type="number" min="2000" max="2100" /></label><label>실제 졸업년도<input name="graduation_year" type="number" min="2000" max="2100" /></label></div>
+      <details class="profile-education"><summary>학교 정보 (선택)</summary><p class="field-help">학교 정보 없이도 프로필을 만들고 활동할 수 있습니다. 입학·졸업 연도는 프로필에 표시하지 않습니다.</p><div class="form-row"><label>학교 (선택)<input name="school_name" maxlength="100" /></label><label>학과 (선택)<input name="department_name" maxlength="100" /></label></div>
+      <div class="profile-year-row"><label>입학년도<input name="admission_year" type="number" min="2000" max="2100" /></label><label>졸업예정년도<input name="expected_graduation_year" type="number" min="2000" max="2100" /></label><label>실제 졸업년도<input name="graduation_year" type="number" min="2000" max="2100" /></label></div></details>
       <label>주요 직군<input name="primary_role" maxlength="80" placeholder="예: 게임 기획" list="role-suggestions" /></label>
       <datalist id="role-suggestions">{['게임 기획','클라이언트 개발','서버 개발','2D 아트','3D 아트','UI/UX 디자인','사운드','AI 개발'].map(role=><option value={role}/>)}</datalist>
       <TagPicker name="interests" label="관심 분야" suggestions={interests}/>
       <TagPicker name="tools" label="사용하는 도구" suggestions={tools}/>
 
-      <div class="form-row"><label>참여 가능 상태<select name="availability"><option value="hidden">표시하지 않음</option><option value="available">참여 가능</option><option value="limited">조건부 가능</option><option value="unavailable">현재 참여 어려움</option></select></label><label>프로필 공개 범위<select name="visibility"><option value="members">회원에게 공개</option><option value="public">전체 공개</option><option value="private">비공개</option></select></label></div>
+      <div class="form-row"><label>프로젝트 참여 상태<select name="availability"><option value="hidden">표시하지 않음</option><option value="available">프로젝트 참여 가능</option><option value="limited">프로젝트 참여 조건 협의</option><option value="unavailable">현재 프로젝트 참여 어려움</option></select></label><label>프로필 공개 범위<select name="visibility"><option value="members">회원에게 공개</option><option value="public">전체 공개</option><option value="private">비공개</option></select></label></div>
       <div class="save-bar"><span data-profile-save-state>변경 후 저장해 주세요.</span><a class="text-link" data-my-profile hidden>내 프로필 보기 ↗</a><button class="button primary" type="submit">프로필 저장</button></div>
     </form>
 
