@@ -1,4 +1,4 @@
 ---
-const links=[['/account/','로그인·계정'],['/account/me/','내 프로필'],['/account/contacts/','연락처'],['/account/creator/','Creator 신청']];
+const links=[['/account/','로그인·계정'],['/account/contacts/','연락처'],['/account/creator/','Creator 신청']];
 ---
-<nav class="account-nav" aria-label="계정 메뉴">{links.map(([href,label])=><a href={href} aria-current={(Astro.url.pathname===href||(href==='/account/me/'&&Astro.url.pathname==='/account/profile/'))?'page':undefined}>{label}</a>)}</nav>
+<nav class="account-nav" aria-label="계정 메뉴">{links.map(([href,label])=><a href={href} aria-current={Astro.url.pathname===href?'page':undefined}>{label}</a>)}</nav>

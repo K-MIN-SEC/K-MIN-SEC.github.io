@@ -119,9 +119,7 @@ if (board && !board.dataset.ready) {
           }).catch(()=>{caption.textContent=file.filename+' · 미리보기를 불러오지 못했습니다. 아래 다운로드를 이용해 주세요.';});
         }
         const row=el('div','','form-actions');row.append(button(`📎 ${file.filename}`,()=>downloadFile(file.object_path,file.filename)));
-        if(manages)row.append(button('첨부 삭제',async()=>{if(!confirm('이 첨부파일을 삭제할까요?'))return;await removeFile(file.object_path);await load();status.textContent='첨부파일을 삭제했습니다.';}));attachments.append(row);}
-      if(manages){const label=el('label','첨부파일 추가 (이미지·PDF·TXT·한글·Word·Excel, 각 10MB / 글당 5개)');const input=el('input');input.type='file';input.multiple=true;input.accept='.jpg,.jpeg,.png,.webp,.gif,.pdf,.txt,.hwp,.hwpx,.docx,.xlsx,.ods';label.append(input);
-        attachments.append(label,button('선택 파일 업로드',async()=>{const selected=Array.from(input.files??[]);if(!selected.length)throw new Error('첨부할 파일을 선택해 주세요.');try{await uploadFiles(post.id,selected);}catch(e){await load();throw e;}await load();status.textContent='첨부파일을 업로드했습니다.';},'button secondary'));}
+        attachments.append(row);}
       article.append(attachments);
       const liked=likes.data?.some(l=>l.user_id===userId);
       const like=button(`${liked?'♥':'♡'} 좋아요 ${likes.data?.length??0}`,async()=>{await ensureCommunityUser();const result=await supabase!.rpc('toggle_space_like',{p_post_id:post.id});if(result.error)throw result.error;await load();notify(liked?'좋아요를 취소했습니다.':'좋아요를 눌렀습니다.');},'like-button');like.setAttribute('aria-pressed',String(Boolean(liked)));article.append(like);
@@ -173,7 +171,7 @@ if (board && !board.dataset.ready) {
       if(result.error)throw result.error;created=true;createdId=typeof result.data==='string'?result.data:result.data.id;
       // Reset immediately after the post commits so retries cannot duplicate it.
       form.reset();dirty=false;if(spaceExtendedEnabled)await uploadFiles(createdId,files);flash('게시글을 등록했습니다.');location.assign('/space/'+createdId+'/');
-    }catch(error){if(created){const link=el('a','저장된 글에서 첨부파일 다시 올리기 →','button secondary');link.href='/space/'+createdId+'/';board.append(link);submit.hidden=true;status.textContent=`글은 저장했지만 일부 첨부파일을 올리지 못했습니다. 해당 글에서 다시 첨부해 주세요. ${messageOf(error)}`;}else status.textContent=messageOf(error);}finally{submit.disabled=false;}};
+    }catch(error){if(created){const link=el('a','수정 페이지에서 첨부파일 다시 올리기 →','button secondary');link.href='/space/edit/?post='+encodeURIComponent(createdId);board.append(link);submit.hidden=true;status.textContent=`글은 저장했지만 일부 첨부파일을 올리지 못했습니다. 수정 페이지에서 다시 첨부해 주세요. ${messageOf(error)}`;}else status.textContent=messageOf(error);}finally{submit.disabled=false;}};
   reportForm.onsubmit=async e=>{e.preventDefault();if((e.submitter as HTMLButtonElement).value==='cancel'){reportDialog.close();return;}try{await ensureCommunityUser();const data=new FormData(reportForm);const result=await supabase!.rpc('create_community_report',{p_target_id:data.get('target_id'),p_type:data.get('target_type'),p_reason:data.get('reason')});if(result.error)throw result.error;reportDialog.close();status.textContent='신고가 접수되었습니다.';}catch(error){status.textContent=messageOf(error);}};
   more.onclick=()=>{limit+=20;load().catch(e=>status.textContent=messageOf(e));};
   let dirty=false;

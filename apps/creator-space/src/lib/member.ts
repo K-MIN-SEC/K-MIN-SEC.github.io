@@ -1,3 +1,4 @@
+import { profileSummary } from "./profile-summary";
 import { supabase, messageOf } from "./supabase";
 const root = document.querySelector<HTMLElement>("[data-member-profile]")!;
 const get = (key: string) =>
@@ -16,6 +17,14 @@ async function hydrate() {
   const p = result.data;
   if (!p) return;
   get("edit").hidden=p.user_id!==session.data.session.user.id;
+  const details=profileSummary(p);
+  get("facts").hidden=false;
+  for(const key of ['years','availability'] as const){get(key).textContent=details[key];get(key).hidden=!details[key];}
+  for(const key of ['interests','tools'] as const){
+    const tags=details[key];get(key).replaceChildren();
+    for(const tag of tags){const chip=document.createElement('span');chip.className='profile-tag';chip.textContent=tag;get(key).append(chip);}
+    if(!tags.length){const empty=document.createElement('p');empty.className='profile-empty';empty.textContent=key==='interests'?'등록한 관심 분야가 없습니다.':'등록한 도구가 없습니다.';get(key).append(empty);}
+  }
   get("name").textContent = p.display_name;
   get("bio").textContent = p.bio;
   get("meta").textContent = [p.school_name, p.department_name, p.primary_role]
@@ -76,6 +85,9 @@ async function hydrate() {
     a.href = `/projects/${pr.data.id}/`;
     a.textContent = `${pr.data.title} · ${m.role} · 참여 확인됨`;
     get("experience").append(a);
+  }
+  for(const [key,text] of [['works','표시할 작품이 아직 없습니다.'],['experience','표시할 프로젝트 참여 이력이 아직 없습니다.']]){
+    if(!get(key).children.length){const empty=document.createElement('p');empty.className='profile-empty';empty.textContent=text;get(key).append(empty);}
   }
 }
 hydrate().catch((e) => (get("status").textContent = messageOf(e)));
