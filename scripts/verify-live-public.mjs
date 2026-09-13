@@ -8,10 +8,14 @@ const env = Object.fromEntries(readFileSync('.env', 'utf8').split(/\r?\n/).filte
 assert.ok(env.PUBLIC_SUPABASE_URL && env.PUBLIC_SUPABASE_ANON_KEY, 'Supabase public environment values are required');
 const db = createClient(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 
-for (const table of ['project_likes', 'project_comments', 'space_posts', 'space_likes', 'space_comments']) {
+for (const table of ['project_likes', 'project_comments', 'space_posts', 'space_likes', 'space_comments', 'space_attachments']) {
   const result = await db.from(table).select('*', { count: 'exact', head: true });
   assert.equal(result.error, null, `${table}: public read should be available`);
 }
+const extendedPosts = await db.from('space_posts').select('id,is_secret,is_notice', { head: true });
+assert.equal(extendedPosts.error, null, 'space_posts: private-post columns should be available');
+const feed = await db.rpc('list_space_posts', { p_offset: 0, p_id: null });
+assert.equal(feed.error, null, 'list_space_posts: anonymous feed RPC should be available');
 const admins = await db.from('admins').select('user_id', { head: true });
 assert.ok(admins.error, 'anonymous visitors must not read admin membership');
 
@@ -20,4 +24,4 @@ const write = await db.from('space_posts').insert({ user_id: fake, display_name:
 assert.ok(write.error, 'anonymous visitors must not create posts');
 const report = await db.from('reports').insert({ user_id: fake, target_type: 'space_post', target_id: fake, reason: 'other' });
 assert.ok(report.error, 'anonymous visitors must not create reports');
-console.log('Passed: live public reads, hidden admin membership, and rejected anonymous writes/reports.');
+console.log('Passed: live 0004 reads/RPC, hidden admin membership, and rejected anonymous writes/reports.');
