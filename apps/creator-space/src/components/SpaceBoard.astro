@@ -4,17 +4,17 @@ const extended = import.meta.env.PUBLIC_SPACE_EXTENDED === 'true';
 const {postId, mode=postId?'detail':'list'}=Astro.props;
 ---
 <section class="space-board" data-space-board data-mode={mode} data-shared-post={postId} aria-label="커뮤니티 게시판">
-  <div class="board-toolbar"><a href="/space/" class="text-link">{mode==='list'?'전체 게시글':'← 게시판 목록'}</a>{mode!=='write'&&<a class="button primary" href="/space/write/">글쓰기</a>}</div>
+  <div class="board-toolbar"><a href="/space/" class="text-link">{mode==='list'?'전체 게시글':'← 게시판 목록'}</a>{mode!=='write'&&mode!=='edit'&&<a class="button primary" href="/space/write/">글쓰기</a>}</div>
   {mode==='list'&&<><div class="board-controls"><div class="board-tabs" role="group" aria-label="게시글 종류"><button type="button" data-filter="all" aria-pressed="true">전체</button><button type="button" data-filter="notice" aria-pressed="false">공지</button><button type="button" data-filter="secret" aria-pressed="false">비밀글</button></div><label class="board-search">제목·작성자 검색<input type="search" data-board-search placeholder="불러온 글에서 검색"/></label></div><div class="board-columns" aria-hidden="true"><span>구분</span><span>제목</span><span>작성자</span><span>작성일</span></div></>}
-  {mode==='write'&&<div class="space-compose">
+  {(mode==='write'||mode==='edit')&&<div class="space-compose">
     <div><span class="eyebrow">OPEN BOARD</span><h2 id="write" tabindex="-1">새 게시글</h2><p>게임, 개발, 아트, 생성형 AI에 관한 작업이나 의견을 나눠주세요.</p></div>
-    <AuthGate><form data-post-form>
-      <div class="form-row"><label>닉네임<input name="display_name" maxlength="24" autocomplete="nickname" required /></label><label>제목<input name="title" minlength="2" maxlength="80" required /></label></div>
+    <AuthGate><form data-post-form><fieldset class="community-fields" data-edit-fields disabled={mode==='edit'}>
+      <p class="author-identity">작성자 <strong data-post-author>프로필 이름을 확인하고 있습니다.</strong></p><input type="hidden" name="display_name"/><div><label>제목<input name="title" minlength="2" maxlength="80" required /></label></div>
       <label>내용<textarea name="body" minlength="2" maxlength="2000" rows="12" placeholder="질문, 작업 근황, 피드백받고 싶은 내용을 자유롭게 적어주세요." required></textarea></label>
       <label>작업 링크 <small>(선택)</small><input name="link_url" type="url" maxlength="500" placeholder="https://" /></label>
-      {extended && <><label>게시글 비밀번호 <small>(선택 · 비워두면 공개글)</small><input name="password" type="password" minlength="8" maxlength="72" autocomplete="off" /><small>계정 비밀번호와 별개입니다. 8자 이상으로 정해 공유할 사람에게 전달해 주세요.</small></label><label>첨부파일 <small>(이미지·PDF·TXT·한글·Word·Excel, 각 10MB 이하 · 최대 5개)</small><input name="files" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.txt,.hwp,.hwpx,.docx,.xlsx,.ods" /></label></>}
-      <div class="form-actions"><a class="button secondary" href="/space/">취소</a><small>{extended ? '공지 등록은 관리자가 게시 후 설정할 수 있습니다.' : '가입한 회원은 누구나 작성할 수 있습니다.'}</small><button class="button primary" type="submit">게시하기</button></div>
-    </form></AuthGate>
+      {extended && <>{mode!=='edit'&&<label>게시글 비밀번호 <small>(선택 · 비워두면 공개글)</small><input name="password" type="password" minlength="8" maxlength="72" autocomplete="off" /><small>계정 비밀번호와 별개입니다. 8자 이상으로 정해 공유할 사람에게 전달해 주세요.</small></label>}<div data-existing-files hidden><h3>현재 첨부파일</h3><p>삭제할 파일을 선택하면 저장할 때 삭제됩니다.</p><div data-existing-file-list></div></div><label>첨부파일 <small>(이미지·PDF·TXT·한글·Word·Excel, 각 10MB 이하 · 최대 5개)</small><input name="files" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.txt,.hwp,.hwpx,.docx,.xlsx,.ods" /></label></>}
+      <div class="form-actions"><a class="button secondary" href={mode==='edit'?`/space/${postId}/`:'/space/'}>취소</a><small>{extended ? '공지 등록은 관리자가 게시 후 설정할 수 있습니다.' : '가입한 회원은 누구나 작성할 수 있습니다.'}</small><button class="button primary" type="submit">{mode==='edit'?'수정 저장':'게시하기'}</button></div>
+    </fieldset></form></AuthGate>
   </div>
   }
   <p class="community-status" data-space-status role="status">Space를 불러오는 중입니다.</p>

@@ -14,6 +14,13 @@ export async function ensureCommunityUser() {
   if (data.session?.user && !data.session.user.is_anonymous) return data.session.user;
   throw new Error('상단 로그인 메뉴에서 먼저 로그인해 주세요.');
 }
+export async function communityDisplayName() {
+  const user=await ensureCommunityUser();
+  const profile=await supabase!.from('member_profiles').select('display_name').eq('user_id',user.id).maybeSingle();
+  if(profile.error)throw profile.error;
+  // Never derive a public nickname from the login email.
+  return String(profile.data?.display_name||'회원').trim().slice(0,24)||'회원';
+}
 
 export function messageOf(error: unknown) {
   const message=error instanceof Error?error.message:error&&typeof error==='object'&&'message' in error?String(error.message):'';

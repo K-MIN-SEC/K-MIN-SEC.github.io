@@ -15,13 +15,14 @@ async function hydrate() {
   if (result.error) throw result.error;
   const p = result.data;
   if (!p) return;
+  get("edit").hidden=p.user_id!==session.data.session.user.id;
   get("name").textContent = p.display_name;
   get("bio").textContent = p.bio;
   get("meta").textContent = [p.school_name, p.department_name, p.primary_role]
     .filter(Boolean)
     .join(" · ");
   get("status").textContent =
-    p.visibility === "public" ? "" : "회원에게 공개된 프로필입니다.";
+    p.visibility === "public" ? "" : p.visibility === "private" ? "나만 볼 수 있는 비공개 프로필입니다." : "회원에게 공개된 프로필입니다.";
   const [contacts, works, members] = await Promise.all([
     db
       .from("profile_contacts")

@@ -1,9 +1,9 @@
 import { flash, notify } from './feedback';
-import { ensureCommunityUser, messageOf, supabase } from './supabase';
+import { ensureCommunityUser, communityDisplayName, messageOf, supabase } from './supabase';
 import { contentActions } from './content-actions';
 import { uploadFiles, validateFiles, removeFile, downloadFile, spaceExtendedEnabled, isPreviewImage, previewImage } from './space-files';
 
-const board = document.querySelector<HTMLElement>('[data-space-board]');
+const board = document.querySelector<HTMLElement>('[data-space-board]')!;
 if (board && !board.dataset.ready) {
   board.dataset.ready = 'true';
   const previewUrls:string[]=[];let previewGeneration=0;
@@ -12,6 +12,9 @@ if (board && !board.dataset.ready) {
   const status = board.querySelector<HTMLElement>('[data-space-status]')!;
   const form = board.querySelector<HTMLFormElement>('[data-post-form]');
   const mode=board.dataset.mode;
+  let editingPost:{id:string;user_id:string;display_name:string}|null=null;
+  let existingFiles:{filename:string;object_path:string}[]=[];
+  let replyName='회원';
   if(mode==='list'&&location.hash==='#write')location.replace('/space/write/');
   let filter='all';
   let search='';
@@ -50,13 +53,14 @@ if (board && !board.dataset.ready) {
       const postLikes=(likes.data??[]).filter(like=>like.post_id===post.id);const liked=postLikes.some(like=>like.user_id===userId);
       const like=button(`${liked?'♥':'♡'} 좋아요 ${postLikes.length}`,async()=>{await ensureCommunityUser();const result=await supabase!.rpc('toggle_space_like',{p_post_id:post.id});if(result.error)throw result.error;await load();notify(liked?'좋아요를 취소했습니다.':'좋아요를 눌렀습니다.');},'like-button');like.setAttribute('aria-pressed',String(liked));article.append(like);
       const replyList=el('div','','space-replies');for(const reply of (replies.data??[]).filter(row=>row.post_id===post.id)){const row=el('article','','space-reply');const top=el('div','','space-reply-meta');top.append(el('strong',reply.display_name),el('time',new Date(reply.created_at).toLocaleDateString('ko-KR')),report(reply.id,'space_comment'));row.append(top,el('p',reply.body));if(reply.user_id===userId)row.append(contentActions(reply,'space_comment',load,status));replyList.append(row);}
-      if(userId){const replyForm=el('form','','space-reply-form');const nick=el('input');nick.placeholder='닉네임';nick.setAttribute('aria-label','답글 닉네임');nick.required=true;nick.maxLength=24;const body=el('input');body.placeholder='답글을 남겨주세요';body.setAttribute('aria-label','답글 내용');body.required=true;body.minLength=2;body.maxLength=800;const send=el('button','답글','button secondary');send.type='submit';replyForm.append(nick,body,send);replyForm.onsubmit=async event=>{event.preventDefault();send.disabled=true;try{await ensureCommunityUser();const result=await supabase!.rpc('create_space_comment',{p_post_id:post.id,p_name:nick.value,p_body:body.value});if(result.error)throw result.error;await load();status.textContent='댓글을 등록했습니다.';}catch(error){status.textContent=messageOf(error);}finally{send.disabled=false;}};replyList.append(replyForm);}
+      if(userId){const replyForm=el('form','','space-reply-form');const nick=el('span',replyName,'reply-author');const body=el('input');body.placeholder='답글을 남겨주세요';body.setAttribute('aria-label','답글 내용');body.required=true;body.minLength=2;body.maxLength=800;const send=el('button','답글','button secondary');send.type='submit';replyForm.append(nick,body,send);replyForm.onsubmit=async event=>{event.preventDefault();send.disabled=true;try{await ensureCommunityUser();const result=await supabase!.rpc('create_space_comment',{p_post_id:post.id,p_name:await communityDisplayName(),p_body:body.value});if(result.error)throw result.error;await load();status.textContent='댓글을 등록했습니다.';}catch(error){status.textContent=messageOf(error);}finally{send.disabled=false;}};replyList.append(replyForm);}
       article.append(replyList);feed.append(article);
     }
     more.hidden=true;status.textContent=posts.length?'':'첫 번째 이야기를 남겨보세요.';
   }
   async function load() {
     if(mode==='write'){status.textContent='';return;}
+    if(mode==='edit'){await loadEditor();return;}
     if (!supabase) {status.textContent='방문자 Space 연결을 준비하고 있습니다.';return;}
     status.textContent='게시글을 불러오는 중입니다.';
     if(!spaceExtendedEnabled){await loadBasic();return;}
@@ -124,9 +128,9 @@ if (board && !board.dataset.ready) {
       const replyList=el('div','','space-replies');replyList.append(el('h2','댓글 '+(replies.data?.length??0)));
       for(const reply of replies.data??[]){const row=el('article','','space-reply');const top=el('div','','space-reply-meta');top.append(el('strong',reply.display_name));row.append(top,el('p',reply.body));
         const actions=admin||reply.user_id===userId?contentActions(reply,'space_comment',load,status,admin):el('div','','form-actions');actions.classList.add('comment-actions');actions.append(report(reply.id,'space_comment'));row.append(actions);replyList.append(row);}
-      if(userId){const replyForm=el('form','','space-reply-form');const nick=el('input');nick.placeholder='닉네임';nick.setAttribute('aria-label','답글 닉네임');nick.required=true;nick.maxLength=24;
+      if(userId){const replyForm=el('form','','space-reply-form');const nick=el('span',replyName,'reply-author');
         const body=el('input');body.placeholder='답글을 남겨주세요';body.setAttribute('aria-label','답글 내용');body.required=true;body.minLength=2;body.maxLength=800;const send=el('button','답글','button secondary');send.type='submit';replyForm.append(nick,body,send);
-        replyForm.onsubmit=async e=>{e.preventDefault();send.disabled=true;try{await ensureCommunityUser();const result=await supabase!.rpc('create_space_comment',{p_post_id:post.id,p_name:nick.value,p_body:body.value});if(result.error)throw result.error;await load();status.textContent='댓글을 등록했습니다.';}catch(error){status.textContent=messageOf(error);}finally{send.disabled=false;}};replyList.append(replyForm);
+        replyForm.onsubmit=async e=>{e.preventDefault();send.disabled=true;try{await ensureCommunityUser();const result=await supabase!.rpc('create_space_comment',{p_post_id:post.id,p_name:await communityDisplayName(),p_body:body.value});if(result.error)throw result.error;await load();status.textContent='댓글을 등록했습니다.';}catch(error){status.textContent=messageOf(error);}finally{send.disabled=false;}};replyList.append(replyForm);
       }else replyList.append(el('p','댓글을 남기려면 상단에서 로그인해 주세요.'));
       article.append(replyList);
     }
@@ -134,11 +138,38 @@ if (board && !board.dataset.ready) {
     more.hidden=Boolean(validSharedId)||summaries.length<limit;
     status.textContent=summaries.length?'':validSharedId?'삭제되었거나 숨겨진 게시글입니다.':'첫 번째 이야기를 남겨보세요.';
   }
+  async function loadEditor(){
+    const fields=board.querySelector<HTMLFieldSetElement>('[data-edit-fields]')!;fields.disabled=true;
+    await ensureCommunityUser();
+    const allowed=await supabase!.rpc('can_manage_space',{p_id:validSharedId});if(allowed.error)throw allowed.error;
+    if(!allowed.data)throw new Error('이 글을 수정할 권한이 없습니다. 작성자 또는 운영자만 수정할 수 있습니다.');
+    const result=await supabase!.from('space_posts').select('*').eq('id',validSharedId!).maybeSingle();if(result.error)throw result.error;if(!result.data)throw new Error('수정할 글을 찾지 못했습니다.');
+    const post=result.data;editingPost=post;
+    for(const name of ['title','body','link_url','display_name']){const input=form!.elements.namedItem(name) as HTMLInputElement;input.value=post[name]||'';}
+    board.querySelector<HTMLElement>('[data-post-author]')!.textContent=post.display_name;
+    await loadExistingFiles();fields.disabled=false;status.textContent=post.is_secret?'비밀글입니다. 기존 게시글 비밀번호와 공개 범위는 유지됩니다.':'내용과 첨부파일을 수정할 수 있습니다.';
+  }
+  async function loadExistingFiles(){
+    const files=await supabase!.from('space_attachments').select('filename,object_path').eq('post_id',validSharedId!);if(files.error)throw files.error;existingFiles=files.data||[];
+    const section=board.querySelector<HTMLElement>('[data-existing-files]')!,list=board.querySelector<HTMLElement>('[data-existing-file-list]')!;list.replaceChildren();section.hidden=false;
+    for(const file of existingFiles){const row=el('div','','existing-file-row');const label=el('label');const checkbox=el('input');checkbox.type='checkbox';checkbox.name='remove_files';checkbox.value=file.object_path;label.append(checkbox,el('span','삭제 선택'));row.append(button(file.filename,()=>downloadFile(file.object_path,file.filename)),label);list.append(row);}
+    if(!existingFiles.length)list.append(el('p','첨부된 파일이 없습니다.'));
+  }
+  async function saveEdit(data:FormData,files:File[]){
+    if(!editingPost)throw new Error('수정할 글과 권한을 먼저 확인해 주세요.');
+    const removals=existingFiles.filter(f=>data.getAll('remove_files').includes(f.object_path));
+    if(existingFiles.length-removals.length+files.length>5)throw new Error('기존 파일과 새 파일을 합쳐 최대 5개까지 첨부할 수 있습니다.');
+    const result=await supabase!.rpc('edit_community_content',{p_type:'space_post',p_id:editingPost.id,p_name:editingPost.display_name,p_title:data.get('title'),p_body:data.get('body'),p_link:data.get('link_url')||null});if(result.error)throw result.error;
+    try{for(const file of removals)await removeFile(file.object_path);await uploadFiles(editingPost.id,files);}
+    catch(error){await loadExistingFiles();const input=form!.elements.namedItem('files') as HTMLInputElement;if(input){input.value='';input.dispatchEvent(new Event('change'));}throw new Error('본문은 저장했습니다. 첨부 처리 중 오류가 발생했습니다. 현재 파일 목록을 확인하고 다시 선택해 주세요. '+messageOf(error));}
+    dirty=false;flash('게시글을 수정했습니다.');location.assign('/space/'+editingPost.id+'/');
+  }
   if(form)form.onsubmit=async e=>{e.preventDefault();const submit=form.querySelector<HTMLButtonElement>('[type=submit]')!;submit.disabled=true;let created=false;let createdId='';
     try{const user=await ensureCommunityUser();const data=new FormData(form);const fileInput=form.elements.namedItem('files') as HTMLInputElement|null;const files=Array.from(fileInput?.files??[]);if(spaceExtendedEnabled)validateFiles(files);
+      if(mode==='edit'){await saveEdit(data,files);return;}
       const result=spaceExtendedEnabled
-        ? await supabase!.rpc('create_space_post',{p_name:data.get('display_name'),p_title:data.get('title'),p_body:data.get('body'),p_link:data.get('link_url')||null,p_password:data.get('password')||null})
-        : await supabase!.from('space_posts').insert({user_id:user.id,display_name:data.get('display_name'),title:data.get('title'),body:data.get('body'),link_url:data.get('link_url')||null}).select('id').single();
+        ? await supabase!.rpc('create_space_post',{p_name:await communityDisplayName(),p_title:data.get('title'),p_body:data.get('body'),p_link:data.get('link_url')||null,p_password:data.get('password')||null})
+        : await supabase!.from('space_posts').insert({user_id:user.id,display_name:await communityDisplayName(),title:data.get('title'),body:data.get('body'),link_url:data.get('link_url')||null}).select('id').single();
       if(result.error)throw result.error;created=true;createdId=typeof result.data==='string'?result.data:result.data.id;
       // Reset immediately after the post commits so retries cannot duplicate it.
       form.reset();dirty=false;if(spaceExtendedEnabled)await uploadFiles(createdId,files);flash('게시글을 등록했습니다.');location.assign('/space/'+createdId+'/');
@@ -154,12 +185,11 @@ if (board && !board.dataset.ready) {
     const selectedUrls:string[]=[];const clear=()=>{selectedUrls.splice(0).forEach(u=>URL.revokeObjectURL(u));previews.replaceChildren();};
     window.addEventListener('pagehide',clear);form?.addEventListener('reset',()=>{clear();note.textContent='';fileInput.setCustomValidity('');});
     fileInput.onchange=()=>{clear();try{
-      const files=Array.from(fileInput.files??[]);validateFiles(files);note.textContent=files.length?files.length+'개 선택됨 · 게시하기를 누르면 업로드됩니다.':'선택한 파일이 없습니다.';fileInput.setCustomValidity('');
+      const files=Array.from(fileInput.files??[]);validateFiles(files);note.textContent=files.length?files.length+'개 선택됨 · '+(mode==='edit'?'수정 저장':'게시하기')+'를 누르면 업로드됩니다.':'선택한 파일이 없습니다.';fileInput.setCustomValidity('');
       for(const file of files){const figure=el('figure','','attachment-image');const caption=el('figcaption',file.name+' · '+(file.size/1024).toFixed(1)+' KB');figure.append(caption);
         if(isPreviewImage(file.name)&&['image/jpeg','image/png','image/webp','image/gif'].includes(file.type)){const source=URL.createObjectURL(file);selectedUrls.push(source);const img=el('img');img.src=source;img.alt=file.name+' 미리보기';img.onerror=()=>{img.remove();caption.textContent=file.name+' · 미리보기 불가';};figure.prepend(img);}previews.append(figure);}
     }catch(e){note.textContent=messageOf(e);fileInput.setCustomValidity(messageOf(e));notify(messageOf(e),'error');}};
   }
-  const prefill=async()=>{if(!supabase)return;const session=await supabase.auth.getSession();const id=session.data.session?.user.id;if(!id)return;const p=await supabase.from('member_profiles').select('display_name').eq('user_id',id).maybeSingle();const nick=form?.elements.namedItem('display_name') as HTMLInputElement|null;if(nick&&!nick.value)nick.value=(p.data?.display_name||'').slice(0,24);};
-  prefill().catch(()=>{});
-  load().catch(e=>status.textContent=messageOf(e));
+  const prefill=async()=>{if(!supabase||mode==='edit')return;const session=await supabase.auth.getSession();if(!session.data.session?.user)return;replyName=await communityDisplayName();const label=board.querySelector<HTMLElement>('[data-post-author]');if(label)label.textContent=replyName;};
+  prefill().catch(()=>{}).then(()=>load()).catch(e=>status.textContent=messageOf(e));
 }

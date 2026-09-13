@@ -1,0 +1,5 @@
+---
+import Base from '../../layouts/Base.astro';import SpaceBoard from '../../components/SpaceBoard.astro';import {uuid} from '../../lib/server';
+const post=Astro.url.searchParams.get('post');if(!uuid(post||undefined))return Astro.redirect('/404/');
+---
+<Base title="게시글 수정" noindex><header class="compact-header"><span class="eyebrow">COMMUNITY / EDIT</span><h1>게시글 수정</h1><p>본문과 첨부파일을 수정한 뒤 저장해 주세요.</p></header><SpaceBoard mode="edit" postId={post}/></Base>

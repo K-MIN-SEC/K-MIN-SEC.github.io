@@ -130,9 +130,29 @@ try {
   assert.equal((await db.query('select body from space_comments where id=$1',[secretComment])).rows[0].body,'비밀 답글');
   assert.equal((await db.query('select name from storage.objects where name=$1',[objectPath])).rows[0].name,objectPath);
   await assert.rejects(db.query('select password_hash from private.space_passwords'), /permission denied/);
+  // Reading a password-protected post never grants edit or attachment management.
+  assert.equal((await db.query('select public.can_manage_space($1) ok',[secret])).rows[0].ok,false);
+  await assert.rejects(edit(secret,'space_post','열람자가 수정 시도'),/Edit access denied/);
+  await assert.rejects(db.query('select public.reserve_space_attachment($1,$2)',[secret,'reader.png']),/Edit access denied/);
+  await assert.rejects(db.query('select public.remove_space_attachment($1)',[objectPath]),/denied/);
+  const noDelete=await db.query('delete from storage.objects where name=$1 returning name',[objectPath]);assert.equal(noDelete.rows.length,0);
+  await asUser(other); // Moderator, independently from Creator status.
+  assert.equal((await db.query('select body from space_posts where id=$1',[secret])).rows[0].body,'비밀 본문');
+  assert.equal((await db.query('select body from space_comments where id=$1',[secretComment])).rows[0].body,'비밀 답글');
+  assert.equal((await db.query('select name from storage.objects where name=$1',[objectPath])).rows[0].name,objectPath);
+  assert.equal((await db.query('select public.can_manage_space($1) ok',[secret])).rows[0].ok,true);
+  await db.query('select public.edit_community_content($1,$2,$3,$4,$5,$6)',['space_post',secret,'테스터','비밀 본문','비밀 제목',null]);
+  await asUser(admin);await db.query('select public.set_community_visibility($1,$2,$3)',['space_post',secret,'hidden']);
+  await asUser(owner);
+  await assert.rejects(edit(secret,'space_post','숨김 글 수정 시도'),/Edit access denied/);
+  await assert.rejects(db.query('select public.reserve_space_attachment($1,$2)',[secret,'hidden.png']),/Edit access denied/);
+  await asUser(admin);await db.query('select public.set_community_visibility($1,$2,$3)',['space_post',secret,'visible']);
+
   await asUser(owner); await db.query('select public.set_space_password($1,$2)',[secret,'rotated-post-password']);
   await asUser(reader); assert.equal((await db.query('select id from space_posts where id=$1',[secret])).rows.length,0);
   await asUser(admin); assert.equal((await db.query('select body from space_posts where id=$1',[secret])).rows[0].body,'비밀 본문');
+  assert.equal((await db.query('select body from space_comments where id=$1',[secretComment])).rows[0].body,'비밀 답글');
+  assert.equal((await db.query('select name from storage.objects where name=$1',[objectPath])).rows[0].name,objectPath);
   await assert.rejects(db.query('select public.set_space_notice($1,true)',[secret]), /비밀글은 공지/);
   await db.query('select public.set_space_password($1,null)',[secret]); await db.query('select public.set_space_notice($1,true)',[secret]);
   assert.equal((await db.query('select is_notice from space_posts where id=$1',[secret])).rows[0].is_notice,true);

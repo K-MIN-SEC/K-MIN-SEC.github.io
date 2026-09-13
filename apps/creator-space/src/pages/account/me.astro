@@ -1,0 +1,29 @@
+---
+import Base from '../../layouts/Base.astro';
+import AccountNav from '../../components/AccountNav.astro';
+---
+<Base title="내 프로필" noindex>
+  <header class="compact-header"><span class="eyebrow">MY PROFILE</span><h1>내 프로필</h1></header>
+  <AccountNav/>
+  <section class="account-panel">
+    <p role="status" data-profile-route-status>내 프로필을 확인하고 있습니다.</p>
+    <a class="button primary" data-profile-route-action hidden></a>
+  </section>
+</Base>
+<script>
+  import {supabase,messageOf} from '../../lib/supabase';
+  const status=document.querySelector<HTMLElement>('[data-profile-route-status]')!;
+  const action=document.querySelector<HTMLAnchorElement>('[data-profile-route-action]')!;
+  async function openProfile(){
+    if(!supabase)throw new Error('프로필에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+    const session=await supabase.auth.getSession();if(session.error)throw session.error;
+    const user=session.data.session?.user;
+    if(!user||user.is_anonymous){status.textContent='로그인하면 내 프로필을 볼 수 있습니다.';action.href='/account/';action.textContent='로그인하기';action.hidden=false;return;}
+    const profile=await supabase.from('member_profiles').select('handle').eq('user_id',user.id).maybeSingle();
+    if(profile.error)throw profile.error;
+    if(profile.data){location.replace('/members/'+encodeURIComponent(profile.data.handle)+'/');return;}
+    status.textContent='아직 프로필이 없습니다. 나를 소개하는 프로필을 만들어보세요.';
+    action.href='/account/profile/';action.textContent='프로필 만들기';action.hidden=false;
+  }
+  openProfile().catch(e=>{status.textContent=messageOf(e);action.href='/account/me/';action.textContent='다시 시도';action.hidden=false;});
+</script>

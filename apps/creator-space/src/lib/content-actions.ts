@@ -8,6 +8,7 @@ export function contentActions(item: CommunityContent, type: ContentType, reload
   const actions = document.createElement('div'); actions.className = 'form-actions';
   const edit = document.createElement('button'); edit.type = 'button'; edit.className = 'text-link'; edit.textContent = '수정';
   edit.addEventListener('click', () => {
+    if(type==='space_post'){location.assign('/space/edit/?post='+encodeURIComponent(item.id));return;}
     const dialog = document.createElement('dialog'); dialog.className = 'report-dialog';
     const form = document.createElement('form'); const heading = document.createElement('h3'); heading.textContent = '내용 수정'; form.append(heading);
     const add = (labelText: string, name: string, value: string, max: number, multiline = false) => {
@@ -17,10 +18,8 @@ export function contentActions(item: CommunityContent, type: ContentType, reload
       if (input instanceof HTMLInputElement && name === 'link_url') input.type = 'url';
       label.append(input); form.append(label);
     };
-    add('닉네임', 'display_name', item.display_name, 24);
-    if (type === 'space_post') add('제목', 'title', item.title ?? '', 80);
-    add('내용', 'body', item.body, type === 'space_post' ? 2000 : 800, true);
-    if (type === 'space_post') add('작업 링크 (선택)', 'link_url', item.link_url ?? '', 500);
+    const author=document.createElement('p');author.textContent=item.display_name;form.append(author);
+    add('내용', 'body', item.body, 800, true);
     const notice = document.createElement('p'); notice.setAttribute('role', 'status'); form.append(notice);
     const row = document.createElement('div'); row.className = 'form-actions';
     const cancel = document.createElement('button'); cancel.type = 'button'; cancel.className = 'button secondary'; cancel.textContent = '취소'; cancel.onclick = () => dialog.close();
@@ -28,7 +27,7 @@ export function contentActions(item: CommunityContent, type: ContentType, reload
     form.addEventListener('submit', async (event) => {
       event.preventDefault(); const data = new FormData(form); save.disabled = true;
       try {
-        const { error } = await supabase!.rpc('edit_community_content', { p_type: type, p_id: item.id, p_name: String(data.get('display_name')).trim(), p_body: String(data.get('body')).trim(), p_title: data.get('title'), p_link: data.get('link_url') || null });
+        const { error } = await supabase!.rpc('edit_community_content', { p_type: type, p_id: item.id, p_name: item.display_name, p_body: String(data.get('body')).trim(), p_title: data.get('title'), p_link: data.get('link_url') || null });
         if (error) throw error;
         dialog.close(); await reload(); status.textContent = '수정했습니다.';
       } catch (error) { notice.textContent = messageOf(error); }

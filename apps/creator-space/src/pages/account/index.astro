@@ -12,7 +12,7 @@ const enabledProviders = [
 ].filter(Boolean) as { id: 'google' | 'github'; label: string; className: string }[];
 ---
 <Base title="Account · 로그인" description="Creator Space 로그인과 계정 관리" noindex>
-  <header class="compact-header"><span class="eyebrow">CREATOR SPACE</span><h1>로그인<span class="brand-period">.</span></h1><p>연결된 소셜 계정으로 로그인하고 작업과 생각을 나눠보세요.</p></header>
+  <header class="compact-header"><span class="eyebrow">CREATOR SPACE</span><h1 data-account-heading>로그인</h1><p data-account-description>연결된 소셜 계정으로 로그인하고 작업과 생각을 나눠보세요.</p></header>
   <AccountNav/><section class="account-panel" aria-labelledby="account-title">
     <h2 id="account-title">계정으로 시작하기</h2>
     <p class="notice" data-account-status role="status">계정 서비스를 확인하고 있습니다.</p>
@@ -21,7 +21,16 @@ const enabledProviders = [
     </div>
     {!googleLoginEnabled && <p class="provider-note">Google 로그인은 연결을 준비하고 있습니다.</p>}
     {emailLoginEnabled && <details class="email-login"><summary>운영자용 이메일 링크 로그인</summary><form data-account-form><fieldset class="community-fields" disabled><label>이메일<input name="email" type="email" autocomplete="email" required placeholder="you@example.com" /></label><button class="button secondary" type="submit">로그인 링크 받기</button><p>기존 운영자 계정 확인용입니다. 일반 회원 가입은 Google/GitHub를 사용합니다.</p></fieldset></form></details>}
-    <div data-account-session hidden><p data-account-email></p><a class="button primary" href="/account/profile/">프로필 수정 →</a><div class="form-actions"><a class="button primary" href="/studio/">내 작업 관리</a><a class="button secondary" href={url('space/write/')}>게시글 쓰기</a><a class="button secondary" data-account-admin href={url('admin/')} hidden>관리자 화면</a><button class="button secondary" data-account-logout type="button">로그아웃</button></div></div>
+    <div data-account-session hidden>
+      <p class="account-identity" data-account-email></p>
+      <div class="account-shortcuts">
+        <a class="button primary" href="/account/me/">내 프로필 보기</a>
+        <a class="button secondary" href="/studio/">내 작업 관리</a>
+        <a class="button secondary" href={url('space/write/')}>게시글 쓰기</a>
+        <a class="button secondary" data-account-admin href={url('admin/')} hidden>관리자 화면</a>
+      </div>
+      <div class="account-signout"><span>현재 계정에서 나가려면</span><button class="button secondary" data-account-logout type="button">로그아웃</button></div>
+    </div>
   </section>
 
 </Base>
@@ -40,6 +49,9 @@ const enabledProviders = [
     const signedIn = Boolean(user && !user.is_anonymous);
     if (form && fields) { form.hidden = signedIn; fields.disabled = signedIn; }
     oauth.hidden = signedIn; sessionBox.hidden = !signedIn;
+    document.querySelector<HTMLElement>('[data-account-heading]')!.textContent=signedIn?'내 계정':'로그인';
+    document.querySelector<HTMLElement>('[data-account-description]')!.textContent=signedIn?'로그인한 계정과 자주 사용하는 메뉴를 확인하세요.':'연결된 소셜 계정으로 로그인하고 작업과 생각을 나눠보세요.';
+    document.getElementById('account-title')!.textContent=signedIn?'로그인한 계정':'계정으로 시작하기';
     status.textContent = signedIn ? '로그인되었습니다.' : 'Google 또는 GitHub 계정으로 로그인할 수 있습니다.';
     if (signedIn && user) {
       document.querySelector<HTMLElement>('[data-account-email]')!.textContent = user.email ?? '로그인한 계정';
