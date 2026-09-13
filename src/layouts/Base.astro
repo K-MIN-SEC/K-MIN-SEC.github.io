@@ -7,7 +7,7 @@ const { title, description, type = 'website', schema, noindex = false } = Astro.
 const fullTitle = `${title} — MINSEC`;
 const canonical = new URL(Astro.url.pathname.replace(/\/404\/$/, '/404.html'), Astro.site);
 const isPlaceholder = Astro.site?.hostname === 'example.com';
-const nav = [{ label: 'Home', path: '' }, { label: 'Projects', path: 'projects/' }, { label: 'Play', path: 'play/' }, { label: 'Devlog', path: 'devlog/' }, { label: 'Space', path: 'space/' }, { label: 'About', path: 'about/' }];
+const nav = [{ label: 'Home', path: '' }, { label: 'Projects', path: 'projects/' }, { label: 'Play', path: 'play/' }, { label: 'Devlog', path: 'devlog/' }, { label: 'About', path: 'about/' }];
 const graph = { '@context': 'https://schema.org', '@graph': [
   { '@type': 'WebSite', '@id': new URL(url(''), Astro.site).href + '#website', name: 'MINSEC', url: new URL(url(''), Astro.site).href, inLanguage: 'ko-KR', description: '게임을 만들고 생성형 AI를 탐구하는 MINSEC의 개인 포트폴리오.' },
   { '@type': 'WebPage', name: fullTitle, description, url: canonical.href, inLanguage: 'ko-KR' },
