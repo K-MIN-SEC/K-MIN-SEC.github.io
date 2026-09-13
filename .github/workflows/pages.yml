@@ -36,6 +36,7 @@ jobs:
           PUBLIC_GITHUB_LOGIN: true
           PUBLIC_GOOGLE_LOGIN: true
           PUBLIC_SPACE_EXTENDED: true
+          PUBLIC_CREATOR_FOUNDATION: true
       - run: npm run verify
       - run: node scripts/test-community.mjs
       - uses: actions/upload-pages-artifact@v4

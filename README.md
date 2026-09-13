@@ -1,6 +1,6 @@
 # MINSEC
 
-> **현재 상태: 개발 중인 코드 공유본입니다.** 개인 포트폴리오와 기존 커뮤니티 구현을 포함합니다. 비밀글·첨부파일·공지 migration은 별도 로컬 DB에서 권한 검증을 통과했지만 실제 Supabase에는 아직 적용하지 않았습니다. `PUBLIC_SPACE_EXTENDED` 기본값은 `false`이며 실제 적용·QA 전에는 운영 기능으로 사용하지 않습니다. GitHub Pages 공개 배포도 아직 진행하지 않았습니다.
+> **현재 상태: GitHub Pages 공개 배포 및 Supabase migration 0001~0008 적용 완료.** 개인 포트폴리오, Space, 비밀글·첨부·공지, Owner/Moderator, Creator 승인 기반과 Profile/Project Experience 데이터 구조를 포함합니다. Creator Space 자체는 아직 별도 서비스로 구현하지 않았습니다.
 
 공개 프로필에는 이름·학교·연락용 이메일만 포함하며 전화번호·생년월일은 제외했습니다. `.env`와 인증 정보는 저장소에 포함하지 않습니다.
 
@@ -33,7 +33,7 @@ npm run preview
 - Devlog: Markdown 콘텐츠 컬렉션, 목록, 글, 목차, 관련 프로젝트
 - Space: 방문자 게시글, 좋아요, 답글, 신고
 - About: 소개, 프로필, 연락처와 작업 관심사
-- Account: 방문자 이메일 링크 로그인 / 로그아웃 (Supabase 연결 필요)
+- Account: Google/GitHub 로그인, Creator Space 프로필·연락처·Creator 신청
 - Admin: 사이트 콘텐츠 편집기와 게시글·댓글 수정·삭제·숨김·신고 관리
 - 404: 없는 주소에 대한 안내
 
@@ -135,29 +135,29 @@ GitHub Pages 배포를 원하면:
 2. Actions → Publish GitHub Pages → Run workflow를 실행합니다.
 3. 워크플로가 Pages 설정에서 실제 origin과 경로를 읽고 빌드·검증·배포합니다.
 
-이 배포 워크플로는 **수동 실행**입니다. 이후 내용 변경도 다시 실행해야 공개됩니다. 다른 정적 호스팅을 쓸 때는 올바른 환경값으로 빌드한 `dist/`를 배포하세요. 하위 경로 호스팅의 robots.txt는 원점 루트에서 조회되므로, 자체 도메인이나 사용자 루트 Pages가 검색 설정 관리에 더 단순합니다.
+배포 워크플로는 `main` push와 수동 실행을 모두 지원합니다. 다른 정적 호스팅을 쓸 때는 올바른 환경값으로 빌드한 `dist/`를 배포하세요. 하위 경로 호스팅의 robots.txt는 원점 루트에서 조회되므로, 자체 도메인이나 사용자 루트 Pages가 검색 설정 관리에 더 단순합니다.
 
 ## 방문자 커뮤니티 연결
 
-현재 로컬 `.env`는 `minsec-site` Supabase 프로젝트에 연결되어 있습니다. 테이블 7개와 RLS 규칙을 적용했고 공개 데이터 조회, 비회원 관리자 정보 접근 차단, 첫 로그인 메일 발송 요청 성공을 확인했습니다. 소유자 이메일 첫 로그인은 완료했습니다. 실제 게시·관리자 동작의 전체 검증은 남아 있습니다. `.env`는 Git과 제공 ZIP에 포함하지 않으므로 다른 컴퓨터에서는 아래 설정을 다시 입력해야 합니다. 환경값이 없는 경우 작성 화면과 버튼을 표시하되 제출을 막고 연결 상태를 안내합니다.
+현재 로컬 `.env`와 공개 배포는 `minsec-site` Supabase 프로젝트에 연결되어 있습니다. migration 0001~0008과 RLS/RPC를 적용했고 공개 조회, 비회원 쓰기 차단, 비밀글·첨부, Owner/Moderator 및 Creator 기반을 검증했습니다. `.env`는 Git에 포함하지 않으므로 다른 컴퓨터에서는 아래 설정을 다시 입력해야 합니다.
 
-1. 새 Supabase 프로젝트의 SQL Editor에서 `supabase/migrations/0001_community.sql`, `0002_accounts_and_editing.sql`, `0003_explicit_api_grants.sql`을 순서대로 실행합니다. 현재 연결된 프로젝트에는 이미 적용했으므로 다시 실행하지 않습니다. 프로젝트 생성 시 Automatically expose new tables를 해제해도 세 번째 파일에서 필요한 권한만 부여합니다.
-2. Authentication → Providers에서 Email을 활성화하고 Anonymous sign-ins는 끕니다. URL Configuration의 Site URL과 Redirect URLs에 공개 사이트 주소와 `/account/` 주소를 등록합니다. 로컬 시험 시 `http://127.0.0.1:4321/account/`도 등록합니다. 하위 경로로 배포하면 그 경로를 포함해야 합니다.
+1. 새 Supabase 프로젝트라면 `supabase/migrations/0001_community.sql`부터 `0008_creator_foundation.sql`까지 번호 순서대로 한 번씩 실행합니다. 현재 연결된 프로젝트에는 모두 적용되어 있으므로 다시 실행하지 않습니다.
+2. Authentication → Providers에서 Google/GitHub를 연결하고 Anonymous sign-ins는 끕니다. URL Configuration에 공개 사이트와 로컬 `/account/` 복귀 주소를 등록합니다.
 3. 프로젝트 URL과 Publishable/anon key를 `.env`의 `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY`에 입력합니다.
-4. 사이트의 Account에서 이메일 로그인을 마친 뒤 Supabase의 Authentication → Users에서 본인 UUID와 이메일 인증 여부를 확인하고 SQL Editor에서 `insert into public.admins(user_id) values ('본인-UUID') on conflict do nothing;`를 한 번 실행합니다. 소유자 첫 로그인은 완료했으며 관리자 등록 작업은 최종 동작 확인이 남아 있습니다.
-5. GitHub 저장소 Settings → Secrets and variables → Actions에 같은 두 값을 secret으로 추가하고 사이트를 다시 배포합니다. 현재 GitHub 배포에는 아직 연결값을 등록하지 않았습니다.
+4. 새 프로젝트의 최초 Owner만 Authentication → Users의 본인 UUID를 확인해 `admins`에 등록합니다. 이후 운영자 지정은 Owner Admin 화면에서 처리합니다.
+5. GitHub 저장소 Settings → Secrets and variables → Actions에 같은 두 공개 연결값을 secret으로 추가하고 배포합니다. 현재 공개 저장소에는 설정이 완료되어 있습니다.
 
-현재 Auth Site URL은 `http://127.0.0.1:4321/account/`이며 허용 복귀 주소는 이 주소와 `http://localhost:4321/account/`입니다. 공개 배포 시 Site URL과 Redirect URLs에 실제 공개 Account 주소를 설정해야 합니다. 일반 회원 로그인 UI는 Google/GitHub OAuth를 우선합니다. 각 공급자 앱의 Client ID/Secret을 Supabase Dashboard에 설정하기 전에는 버튼이 동작하지 않습니다. 운영자용 기존 이메일 매직링크 폼은 `PUBLIC_EMAIL_LOGIN=true`일 때만 표시합니다. 이메일+비밀번호 가입은 제공하지 않습니다.
+일반 회원 로그인은 Google/GitHub OAuth를 사용합니다. 공개 사이트와 로컬 Account 주소가 모두 허용 복귀 주소로 등록되어 있습니다. 운영자용 기존 이메일 매직링크 폼은 `PUBLIC_EMAIL_LOGIN=true`일 때만 표시하며 이메일+비밀번호 가입은 제공하지 않습니다.
 
 기본 이메일 발송 서비스는 Supabase 조직의 팀원 주소에만 메일을 보내며, 현재 시간당 2건으로 제한됩니다. 일반 방문자의 이메일 가입/로그인을 공개하려면 Custom SMTP를 구성하거나 별도로 OAuth 로그인 제공자를 연결해야 합니다. 이메일 확인을 끄는 방식으로 우회하지 않습니다. [Supabase SMTP 안내](https://supabase.com/docs/guides/auth/auth-smtp)
 
-읽기는 비회원에게 허용하고, 작성·좋아요·신고에는 Member 로그인이 필요합니다. 작성자는 본인 글·댓글을 수정/삭제할 수 있고, 관리자는 모든 게시글·댓글 수정/삭제/숨김/재공개와 신고 기각/숨김 처리를 할 수 있습니다. 관리자 여부와 소유권은 Row Level Security와 서버 함수에서 검사합니다. `node scripts/test-community.mjs`로 별도 로컬 PostgreSQL 엔진에서 권한과 수정·신고 흐름을 검증할 수 있습니다. 이 검사는 실제 Supabase Auth 시험을 대신하지 않습니다. Creator 승인, 차단·스팸 자동화·관리자 메일 알림은 아직 포함하지 않았습니다.
+읽기는 공개범위에 따라 Visitor/Member에게 허용하고, 작성·좋아요·신고에는 Member 로그인이 필요합니다. Owner/Moderator 운영 권한과 Creator 공개 권한은 서로 독립입니다. `node scripts/test-community.mjs`는 migration 0001~0008, RLS/RPC, Creator 승인과 Project Experience 확인 흐름을 검증합니다. 자동 스팸 판별·관리자 메일 알림은 아직 포함하지 않았습니다.
 
 2026-09-13 설치 시 Decap 3.16.2와 로컬 서버의 의존성 감사에서 31건(높음 7, 보통 22, 낮음 2)이 보고되었습니다. 호환 가능한 자동 수정으로 해소되지 않았습니다. 편집기 Markdown 처리 등의 하위 의존성에 해당하며, `devDependencies`라고 해서 브라우저에 복사되는 CMS 코드까지 안전하다는 뜻은 아닙니다. 현재 공개 OAuth 편집은 연결하지 않았고, 실제 공개 운영 전 이 의존성의 업데이트/영향 범위를 재검토해야 합니다.
 
 사이트의 이름·학교·연락처는 `src/data/site.json`에서 관리합니다. 현재 공개 저장소에는 이름, 학교와 연락용 이메일만 포함하며 전화번호와 생년월일은 제외했습니다.
 
-확정된 서비스 경계, 권한, 보안 원칙과 A–E 작업 순서는 [`docs/architecture-decisions.md`](docs/architecture-decisions.md)에 기록합니다. 비밀글·첨부파일·공지는 `PUBLIC_SPACE_EXTENDED=true`와 migration 0004가 모두 준비된 뒤에만 활성화합니다. 기본값은 기존 공개 Space와 호환되는 모드입니다. 적용·복구 절차는 [`docs/space-0004-rollout.md`](docs/space-0004-rollout.md), 공통 반응 이전안은 [`docs/content-target-registry-migration.md`](docs/content-target-registry-migration.md), Creator Space 분리안은 [`docs/creator-space-separation.md`](docs/creator-space-separation.md)를 확인하세요.
+확정된 서비스 경계와 권한은 [`docs/architecture-decisions.md`](docs/architecture-decisions.md)에 기록합니다. 적용·복구 절차는 [`docs/space-0004-rollout.md`](docs/space-0004-rollout.md), [`docs/space-0006-security-rollout.md`](docs/space-0006-security-rollout.md), [`docs/creator-foundation-rollout.md`](docs/creator-foundation-rollout.md)를 확인하세요. 공통 반응 이전안과 Creator Space 분리안은 각각 [`docs/content-target-registry-migration.md`](docs/content-target-registry-migration.md), [`docs/creator-space-separation.md`](docs/creator-space-separation.md)에 있습니다.
 
 현재 단계별 완료·대기 항목은 [`docs/phase-status.md`](docs/phase-status.md), OAuth 설정에 필요한 정확한 주소와 QA 기준은 [`docs/oauth-setup.md`](docs/oauth-setup.md)에 정리했습니다.
 

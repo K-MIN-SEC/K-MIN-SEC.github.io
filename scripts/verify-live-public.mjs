@@ -8,7 +8,8 @@ const env = Object.fromEntries(readFileSync('.env', 'utf8').split(/\r?\n/).filte
 assert.ok(env.PUBLIC_SUPABASE_URL && env.PUBLIC_SUPABASE_ANON_KEY, 'Supabase public environment values are required');
 const db = createClient(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 
-for (const table of ['project_likes', 'project_comments', 'space_posts', 'space_likes', 'space_comments', 'space_attachments']) {
+for (const table of ['project_likes', 'project_comments', 'space_posts', 'space_likes', 'space_comments', 'space_attachments',
+  'member_profiles', 'profile_contacts', 'creator_projects', 'project_memberships']) {
   const result = await db.from(table).select('*', { count: 'exact', head: true });
   assert.equal(result.error, null, `${table}: public read should be available`);
 }
@@ -24,4 +25,11 @@ const write = await db.from('space_posts').insert({ user_id: fake, display_name:
 assert.ok(write.error, 'anonymous visitors must not create posts');
 const report = await db.from('reports').insert({ user_id: fake, target_type: 'space_post', target_id: fake, reason: 'other' });
 assert.ok(report.error, 'anonymous visitors must not create reports');
-console.log('Passed: live 0004 reads/RPC, hidden admin membership, and rejected anonymous writes/reports.');
+const profileWrite = await db.from('member_profiles').insert({ user_id: fake, handle: 'blocked-user', display_name: 'Blocked' });
+assert.ok(profileWrite.error, 'anonymous visitors must not create profiles directly');
+const creatorWrite = await db.rpc('create_creator_project', { p_title: 'Blocked', p_summary: 'Anonymous project must fail.', p_category: 'Game' });
+assert.ok(creatorWrite.error, 'anonymous visitors must not create Creator projects');
+const creatorState = await db.rpc('is_creator', { p_user_id: fake });
+assert.equal(creatorState.error, null, 'is_creator: public capability check should be available');
+assert.equal(creatorState.data, false, 'unknown users must not have Creator capability');
+console.log('Passed: live 0004–0008 reads/RPC, private admin membership, and rejected anonymous community/Creator writes.');

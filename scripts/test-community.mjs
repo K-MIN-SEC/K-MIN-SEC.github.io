@@ -61,6 +61,7 @@ try {
   await db.exec(readFileSync('supabase/migrations/0005_storage_api_cleanup.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/0006_security_roles_limits_files.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/0007_lock_direct_community_writes.sql', 'utf8'));
+  await db.exec(readFileSync('supabase/migrations/0008_creator_foundation.sql', 'utf8'));
   assert.equal((await db.query("select count(*)::int count from pg_trigger where tgname='delete_space_object_after_metadata'")).rows[0].count, 0);
   await asUser(admin);
   assert.equal((await db.query('select public.is_owner() owner')).rows[0].owner, true);
@@ -73,6 +74,39 @@ try {
   await asUser(owner);
   await assert.rejects(db.query('insert into project_comments(user_id,project_id,display_name,body) values ($1,$2,$3,$4)', [owner,'erase','테스터','직접 쓰기 우회']), /permission denied/);
   await asUser(null); assert.equal((await db.query('select id from space_posts where id=$1',[post])).rows.length,1);
+
+  // Creator status is independent from community staff, and project history needs member confirmation.
+  await asUser(owner);
+  assert.equal((await db.query('select public.is_creator() creator')).rows[0].creator, false);
+  await db.query('select public.upsert_member_profile($1,$2)', ['minsec-test','MINSEC Test']);
+  await db.query('select public.upsert_profile_contact($1,$2,$3)', ['email','creator@example.com','public']);
+  await db.query('select public.upsert_profile_contact($1,$2,$3)', ['discord','private-handle','private']);
+  await db.query('select public.request_creator_access($1)', ['프로젝트 이력을 등록하고 싶습니다.']);
+  await asUser(admin);
+  assert.equal((await db.query("select count(*)::int count from public.list_creator_approvals() where status='requested'")).rows[0].count, 1);
+  await db.query('select public.set_creator_status($1,$2,$3)', ['owner@example.com','approved','테스트 승인']);
+  await asUser(owner);
+  assert.equal((await db.query('select public.is_creator() creator')).rows[0].creator, true);
+  const creatorProject = (await db.query(
+    'select public.create_creator_project($1,$2,$3,$4,$5,$6,$7,$8,$9) id',
+    ['Project Archive Test','확인된 참여 이력만 공개하는 프로젝트입니다.','Game','Game Design',null,null,'active','public',null]
+  )).rows[0].id;
+  const invitation = (await db.query('select public.invite_project_member($1,$2,$3,$4) id', [creatorProject,'other@example.com','Client','게임플레이 구현'])).rows[0].id;
+  await asUser(null);
+  assert.equal((await db.query('select count(*)::int count from project_memberships where project_id=$1',[creatorProject])).rows[0].count,1);
+  assert.equal((await db.query('select count(*)::int count from profile_contacts where user_id=$1',[owner])).rows[0].count,0);
+  await asUser(other);
+  await db.query('select public.upsert_member_profile($1,$2)', ['other-test','Other Test']);
+  assert.equal((await db.query('select count(*)::int count from profile_contacts where user_id=$1',[owner])).rows[0].count,1);
+  assert.equal((await db.query('select status from project_memberships where id=$1',[invitation])).rows[0].status,'pending');
+  await db.query('select public.respond_project_membership($1,$2)', [invitation,'accepted']);
+  await asUser(null);
+  assert.equal((await db.query('select count(*)::int count from project_memberships where project_id=$1',[creatorProject])).rows[0].count,2);
+  await asUser(admin); await db.query('select public.grant_community_admin($1,$2)', ['other@example.com','moderator']);
+  await asUser(other);
+  assert.equal((await db.query('select public.is_admin() admin, public.is_creator() creator')).rows[0].creator,false);
+  await assert.rejects(db.query('select public.create_creator_project($1,$2,$3)', ['Unauthorized','운영자라도 Creator 승인이 없으면 만들 수 없습니다.','Game']), /Creator approval required/);
+  await assert.rejects(db.query('select public.set_creator_status($1,$2,$3)', ['reader@example.com','approved','']), /Owner access required/);
 
   // Secret posts stay out of the public feed. A direct shared id reveals only a locked summary.
   await asUser(owner);
@@ -106,12 +140,12 @@ try {
   await db.query('select public.remove_space_attachment($1)',[objectPath]);
   await db.query('delete from space_posts where id=$1',[secret]);
   assert.equal((await db.query('select name from storage.objects where name=$1',[objectPath])).rows.length,0);
-  await asUser(other);
+  await asUser(reader);
   const report = (await db.query('select public.create_community_report($1,$2,$3) id', ['space_post', post, 'spam'])).rows[0].id;
   await assert.rejects(db.query('select moderate_report($1,$2)', [report, 'hide']), /Admin access required/);
   await asUser(admin); await db.query('select moderate_report($1,$2)', [report, 'hide']);
   assert.equal((await db.query('select status from reports where id=$1', [report])).rows[0].status, 'resolved');
   await db.query('delete from space_posts where id=$1', [post]);
   assert.equal((await db.query('select id from space_comments where id=$1', [reply])).rows.length, 0);
-  console.log('Passed: migrations 0001–0007, account roles, protected writes and limits, moderation, secret post isolation, and private file rules.');
+  console.log('Passed: migrations 0001–0008, independent Creator/staff roles, confirmed project history, profile privacy, protected writes, secret posts, and private files.');
 } finally { await db.close(); }

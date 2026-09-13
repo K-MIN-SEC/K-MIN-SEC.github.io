@@ -1,9 +1,11 @@
 ---
 import Base from '../../layouts/Base.astro';
+import CreatorProfilePanel from '../../components/CreatorProfilePanel.astro';
 import { url } from '../../lib/urls';
 const emailLoginEnabled = import.meta.env.PUBLIC_EMAIL_LOGIN === 'true';
 const githubLoginEnabled = import.meta.env.PUBLIC_GITHUB_LOGIN !== 'false';
 const googleLoginEnabled = import.meta.env.PUBLIC_GOOGLE_LOGIN === 'true';
+const creatorFoundationEnabled = import.meta.env.PUBLIC_CREATOR_FOUNDATION === 'true';
 const enabledProviders = [
   googleLoginEnabled && { id: 'google', label: 'Google로 계속하기', className: 'primary' },
   githubLoginEnabled && { id: 'github', label: 'GitHub로 계속하기', className: googleLoginEnabled ? 'secondary' : 'primary' },
@@ -21,6 +23,7 @@ const enabledProviders = [
     {emailLoginEnabled && <details class="email-login"><summary>운영자용 이메일 링크 로그인</summary><form data-account-form><fieldset class="community-fields" disabled><label>이메일<input name="email" type="email" autocomplete="email" required placeholder="you@example.com" /></label><button class="button secondary" type="submit">로그인 링크 받기</button><p>기존 운영자 계정 확인용입니다. 일반 회원 가입은 Google/GitHub를 사용합니다.</p></fieldset></form></details>}
     <div data-account-session hidden><p data-account-email></p><div class="form-actions"><a class="button primary" href={url('space/#write')}>Space에 글쓰기</a><a class="button secondary" data-account-admin href={url('admin/')} hidden>관리자 화면</a><button class="button secondary" data-account-logout type="button">로그아웃</button></div></div>
   </section>
+  {creatorFoundationEnabled && <CreatorProfilePanel />}
 </Base>
 <script>
   import { supabase, messageOf } from '../../lib/supabase';
@@ -37,7 +40,7 @@ const enabledProviders = [
     const signedIn = Boolean(user && !user.is_anonymous);
     if (form && fields) { form.hidden = signedIn; fields.disabled = signedIn; }
     oauth.hidden = signedIn; sessionBox.hidden = !signedIn;
-    status.textContent = signedIn ? '로그인되었습니다.' : 'GitHub 계정으로 로그인할 수 있습니다.';
+    status.textContent = signedIn ? '로그인되었습니다.' : 'Google 또는 GitHub 계정으로 로그인할 수 있습니다.';
     if (signedIn && user) {
       document.querySelector<HTMLElement>('[data-account-email]')!.textContent = user.email ?? '로그인한 계정';
       const admin = await supabase.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();

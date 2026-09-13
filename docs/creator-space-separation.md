@@ -59,7 +59,7 @@ MINSEC CMS       No repository access | GitHub Repository Editor
 - Moderator나 Owner 상태는 Creator 상태를 자동으로 부여하지 않는다.
 - MINSEC GitHub CMS 권한은 모든 Supabase 역할과 별개다. `Admin`은 관리 UI의 이름으로만 사용한다.
 
-현재 실제 DB에는 `owner`와 `moderator`만 구현되어 있다. Creator 상태와 승인 흐름은 Creator Space migration에서 새로 추가한다.
+현재 실제 DB에는 `owner`와 `moderator`, 별도의 Creator 승인 상태와 Profile·Project Experience 기반이 구현되어 있다. Creator Space 서비스는 이 구조를 재사용한다.
 
 ## Profile과 연락처
 

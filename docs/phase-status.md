@@ -45,12 +45,15 @@
 ## E. Creator Space 분리
 
 - 결과: 별도 Astro server 서비스, 공유 Supabase Auth/DB, origin별 세션, 공개 SSR, 비밀 캐시 방지, 동적 sitemap, 점진적 이전·복구 설계 작성.
+- 기반 적용: `0008_creator_foundation.sql`을 실제 Supabase에 적용했다. Creator 상태는 Community Staff와 독립이며, Profile 연락처 공개범위와 확인형 Project Experience 구조를 포함한다.
+- 임시 UI: MINSEC Account에서 Profile 저장·연락처·Creator 신청을 제공하고, Owner Admin에서 Creator 승인·반려·해제를 제공한다. Creator Space 분리 후 해당 서비스로 옮긴다.
 - 실제 프로젝트/저장소 생성: 없음.
-- Migration: 없음.
+- Migration: 0008 적용 완료. 기존 MINSEC/Space 테이블 변경 없음.
 - 문서: `docs/creator-space-separation.md`.
 
 ## 남은 순서
 
 1. 별도 Member 계정으로 비밀글 비밀번호 해제와 허용 문서 업로드를 QA한다.
 2. Content Target Registry migration을 구현하고 기존 반응을 대조한다.
-3. Creator Space 서버에서 Turnstile, IP 제한, 파일 격리/검사를 연결한다.
+3. Creator Space 별도 저장소와 read-only 공개 목록을 만든다.
+4. Creator Space 서버에서 Turnstile, IP 제한, 파일 격리/검사를 연결한다.

@@ -38,7 +38,7 @@ MINSEC CMS       No repository access | GitHub Repository Editor
 - `Admin`은 관리 화면의 이름으로만 사용하고 DB 역할 이름은 `moderator`와 `owner`로 통일한다.
 - 일반 가입은 Google/GitHub OAuth가 우선이다. 이메일+비밀번호 가입은 1차 범위에서 제외한다.
 
-현재 DB에는 `admins.role = owner | moderator`만 구현되어 있다. Creator 상태는 Creator Space migration에서 별도 테이블이나 승인 상태로 추가한다.
+현재 DB에는 `admins.role = owner | moderator`와 별도의 `creator_approvals`가 구현되어 있다. 어느 한쪽의 상태가 다른 쪽 권한을 자동으로 부여하지 않는다.
 
 ## Profile과 연락처
 
