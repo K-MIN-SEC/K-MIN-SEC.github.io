@@ -1,0 +1,6 @@
+---
+import {kinds,safeURL,type Kind} from '../lib/server';
+const {item,kind}=Astro.props as {item:Record<string,any>,kind:Kind};
+const href=`/${kinds[kind].path}/${item.id}/`,cover=safeURL(item.cover_url);
+---
+<a class="cs-card" href={href}>{cover&&<img src={cover} alt={item.cover_alt||item.title} loading="lazy" referrerpolicy="no-referrer"/>}<span class="eyebrow">{item.featured?'FEATURED · ':''}{item.category||kinds[kind].label}</span><h2>{item.title}</h2><p>{item.summary}</p><span class="cs-meta">{new Date(item.created_at).toLocaleDateString('ko-KR')} ↗</span></a>

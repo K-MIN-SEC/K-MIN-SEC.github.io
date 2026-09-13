@@ -1,0 +1,10 @@
+---
+import Base from '../../layouts/Base.astro';import ContentCard from '../../components/ContentCard.astro';import {publicDB,kinds,type Kind} from '../../lib/server';
+const kind=(Object.keys(kinds) as Kind[]).find(k=>kinds[k].path===Astro.params.collection);
+if(!kind)return Astro.redirect('/404/');
+const q=(Astro.url.searchParams.get('q')||'').slice(0,100),category=(Astro.url.searchParams.get('category')||'').slice(0,80),page=Math.max(1,Math.min(10000,Number(Astro.url.searchParams.get('page'))||1));
+let items:Record<string,any>[]=[],error=false;
+try{let query=publicDB().from(kind==='project'?'creator_projects':'creator_entries').select('*').eq('visibility','public').is('deleted_at',null);if(kind!=='project')query=query.eq('kind',kind).eq('moderation_status','visible');if(q)query=query.ilike('title',`%${q.replace(/[%_]/g,'')}%`);if(category)query=query.ilike('category',`%${category.replace(/[%_]/g,'')}%`);const result=await query.order('created_at',{ascending:false}).range((page-1)*24,page*24);if(result.error)throw result.error;items=result.data;}catch{error=true;Astro.response.status=503;}
+const next=new URL(Astro.url);next.searchParams.set('page',String(page+1));
+---
+<Base title={kinds[kind].label} noindex={error||Boolean(q||category)||page>1}><div class="cs-bar"><div><span class="eyebrow">CREATOR ARCHIVE</span><h1>{kinds[kind].label}</h1><p>작업과 경험을 살펴보고 다음 연결을 만들어보세요.</p></div><a class="button primary" href={`/studio/?kind=${kind}`}>+ 새로 작성</a></div><form class="cs-filters"><input name="q" aria-label="제목 검색" placeholder="제목으로 검색" value={q}/><input name="category" aria-label="분야 검색" placeholder="분야 · 직군 · 엔진" value={category}/><button class="button secondary">검색</button></form>{error?<p class="cs-empty">목록을 불러오지 못했습니다.</p>:items.length?<div class="cs-grid">{items.slice(0,24).map(item=><ContentCard item={item} kind={kind}/>)}</div>:<p class="cs-empty">아직 조건에 맞는 공개 기록이 없습니다. <a href={`/studio/?kind=${kind}`}>첫 기록 작성하기 →</a></p>}{items.length>24&&<a class="button secondary" href={next.pathname+next.search}>다음 페이지 →</a>}</Base>

@@ -2,12 +2,14 @@
 import Base from '../../layouts/Base.astro';
 import { url } from '../../lib/urls';
 import { cmsConfig } from '../../lib/cms-config';
+import RepositoryEditor from '../../components/RepositoryEditor.astro';
 const available = import.meta.env.DEV || Boolean(import.meta.env.PUBLIC_CMS_AUTH_URL);
 ---
 <Base title="Editor · 사이트 콘텐츠 편집" description="프로젝트, Play, 미디어, Devlog와 프로필을 편집합니다." noindex>
   <header class="page-header"><span class="eyebrow">CONTENT EDITOR</span><h1>콘텐츠 편집<span class="brand-period">.</span></h1><p>프로젝트와 Play 카드를 추가하거나 수정하고, 이미지·영상·Devlog를 관리합니다.</p></header>
   <a class="text-link" href={url('admin/')}>← 관리자 홈</a>
-  <p class="notice" data-cms-status>{import.meta.env.DEV ? '로컬 편집 모드입니다. 저장하면 이 컴퓨터의 사이트 파일이 바뀝니다. 공개 사이트 반영은 별도 배포가 필요합니다.' : available ? 'GitHub 계정으로 로그인해 콘텐츠를 편집하세요. 저장 후 배포하면 공개 사이트에 반영됩니다.' : '공개 사이트 편집은 GitHub 인증 서비스 연결 후 사용할 수 있습니다. 지금은 로컬 사이트의 관리자에서 편집해 주세요.'}</p>
+  <RepositoryEditor />
+  <p class="notice" data-cms-status hidden={!available}>{import.meta.env.DEV ? '아래 로컬 편집기는 이 컴퓨터의 파일만 변경합니다. 공개 사이트는 위 GitHub 편집기를 사용해 주세요.' : '아래는 기존 Decap 편집기입니다.'}</p>
   {available && <button class="button primary" data-cms-open data-script={url('vendor/decap/decap-cms.js')}>편집기 열기</button>}
   <div id="nc-root"></div>
   <script is:inline type="application/json" id="cms-config" set:html={JSON.stringify(cmsConfig).replace(/</g, '\\u003c')} />

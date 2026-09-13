@@ -1,0 +1,160 @@
+---
+import { url } from '../lib/urls';
+---
+<section class="admin-panel" data-admin-panel aria-labelledby="admin-title">
+  <h2 id="admin-title">커뮤니티 관리</h2>
+  <p class="notice" data-admin-status role="status">관리자 상태를 확인하는 중입니다.</p>
+  <a class="button secondary" data-admin-login href={url('account/')}>관리자 계정으로 로그인 →</a>
+  <fieldset class="community-fields" data-admin-dashboard disabled>
+    <section class="admin-role-manager" data-owner-controls hidden aria-labelledby="admin-role-title">
+      <div><span class="eyebrow">OWNER ONLY</span><h3 id="admin-role-title">커뮤니티 운영자 권한</h3><p>이미 Google 또는 GitHub로 한 번 로그인한 회원에게만 권한을 줄 수 있습니다. 이 권한으로는 MINSEC 프로필·Projects·Devlog를 편집할 수 없습니다.</p></div>
+      <form class="comment-form" data-admin-grant-form>
+        <label>회원 이메일<input name="email" type="email" autocomplete="off" required /></label>
+        <label>권한<select name="role"><option value="moderator">운영자 · 신고/게시물 관리</option><option value="owner">소유자 · 운영자 임명 가능</option></select></label>
+        <button class="button secondary" type="submit">권한 저장</button>
+      </form>
+      <div class="report-list" data-admin-roles></div>
+    </section>
+    <section class="admin-role-manager" data-creator-controls hidden aria-labelledby="creator-approval-title">
+      <div><span class="eyebrow">OWNER ONLY</span><h3 id="creator-approval-title">Creator 승인</h3><p>Creator 권한은 운영자 권한과 별개입니다. 프로필을 만든 회원만 Works·Projects·Team Up·Event 공개 권한을 받을 수 있습니다.</p></div>
+      <form class="comment-form" data-creator-grant-form>
+        <label>회원 이메일<input name="email" type="email" autocomplete="off" required /></label>
+        <label>Creator 상태<select name="status"><option value="approved">승인</option><option value="rejected">반려</option><option value="revoked">권한 해제</option></select></label>
+        <button class="button secondary" type="submit">상태 저장</button>
+      </form>
+      <div class="report-list" data-creator-approvals></div>
+    </section>
+    <div class="admin-summary"><label>관리할 내용<select data-admin-filter><option value="reports">처리할 신고</option><option value="space_post">Space 게시글</option><option value="space_comment">Space 답글</option><option value="project_comment">프로젝트 댓글</option></select></label><button class="button secondary" data-admin-reload type="button">새로고침</button></div>
+    <p data-admin-count>관리자 로그인 후 목록이 표시됩니다.</p>
+    <div data-admin-list class="report-list"></div>
+    <button class="button secondary" data-admin-more type="button" hidden>다음 30개</button>
+  </fieldset>
+</section>
+<script>
+  import { messageOf, supabase } from '../lib/supabase';
+  import { contentActions, contentTables, type ContentType } from '../lib/content-actions';
+  const root = document.querySelector<HTMLElement>('[data-admin-panel]')!;
+  const status = root.querySelector<HTMLElement>('[data-admin-status]')!;
+  const login = root.querySelector<HTMLElement>('[data-admin-login]')!;
+  const dashboard = root.querySelector<HTMLFieldSetElement>('[data-admin-dashboard]')!;
+  const list = root.querySelector<HTMLElement>('[data-admin-list]')!;
+  const filter = root.querySelector<HTMLSelectElement>('[data-admin-filter]')!;
+  const count = root.querySelector<HTMLElement>('[data-admin-count]')!;
+  const more = root.querySelector<HTMLButtonElement>('[data-admin-more]')!;
+  const refresh = root.querySelector<HTMLButtonElement>('[data-admin-reload]')!;
+  const ownerControls = root.querySelector<HTMLElement>('[data-owner-controls]')!;
+  const creatorControls = root.querySelector<HTMLElement>('[data-creator-controls]')!;
+  const grantForm = root.querySelector<HTMLFormElement>('[data-admin-grant-form]')!;
+  const roleList = root.querySelector<HTMLElement>('[data-admin-roles]')!;
+  const creatorGrantForm = root.querySelector<HTMLFormElement>('[data-creator-grant-form]')!;
+  const creatorList = root.querySelector<HTMLElement>('[data-creator-approvals]')!;
+  let page = 0;
+  const el = (tag: string, value: string) => { const node = document.createElement(tag); node.textContent = value; return node; };
+  async function loadRoles(currentUserId: string) {
+    const result = await supabase!.rpc('list_community_admins');
+    if (result.error) throw result.error;
+    roleList.replaceChildren();
+    for (const member of result.data ?? []) {
+      const card = el('article', ''); card.className = 'report-card';
+      card.append(el('strong', member.email ?? member.user_id), el('p', member.role === 'owner' ? '소유자' : '커뮤니티 운영자'));
+      if (member.user_id !== currentUserId) {
+        const remove = el('button', '권한 해제') as HTMLButtonElement; remove.type = 'button'; remove.className = 'text-link';
+        remove.onclick = async () => { if (!confirm(`${member.email ?? '이 회원'}의 커뮤니티 관리 권한을 해제할까요?`)) return; remove.disabled = true; try { const response = await supabase!.rpc('revoke_community_admin', { p_user_id: member.user_id }); if (response.error) throw response.error; await loadRoles(currentUserId); } catch (error) { status.textContent = messageOf(error); remove.disabled = false; } };
+        card.append(remove);
+      }
+      roleList.append(card);
+    }
+  }
+  async function setCreatorStatus(email: string, creatorStatus: 'approved' | 'rejected' | 'revoked') {
+    const response = await supabase!.rpc('set_creator_status', { p_email: email, p_status: creatorStatus, p_note: '' });
+    if (response.error) throw response.error;
+  }
+  async function loadCreatorApprovals() {
+    const result = await supabase!.rpc('list_creator_approvals');
+    if (result.error) throw result.error;
+    creatorList.replaceChildren();
+    const labels: Record<string,string> = { requested:'승인 대기',approved:'Creator',rejected:'반려',revoked:'권한 해제' };
+    for (const item of result.data ?? []) {
+      const card = el('article',''); card.className='report-card';
+      card.append(el('strong',item.display_name || item.email),el('p',`${item.email} · ${labels[item.status] ?? item.status}`));
+      if (item.request_message) card.append(el('p',item.request_message));
+      const actions=el('div',''); actions.className='form-actions';
+      const choices: Array<['approved'|'rejected'|'revoked',string]> = item.status === 'approved' ? [['revoked','Creator 해제']] : [['approved','Creator 승인'],['rejected','반려']];
+      for (const [value,label] of choices) {
+        const button=el('button',label) as HTMLButtonElement; button.type='button'; button.className='button secondary';
+        button.onclick=async()=>{if(value==='revoked'&&!confirm(`${item.email}의 Creator 권한을 해제할까요?`))return;button.disabled=true;try{await setCreatorStatus(item.email,value);await loadCreatorApprovals();status.textContent='Creator 상태를 저장했습니다.';}catch(error){status.textContent=messageOf(error);button.disabled=false;}};
+        actions.append(button);
+      }
+      card.append(actions); creatorList.append(card);
+    }
+    if (!result.data?.length) creatorList.append(el('p','Creator 신청 또는 승인 기록이 없습니다.'));
+  }
+  async function load() {
+    if (!supabase) { status.textContent = '커뮤니티 서비스 연결 전입니다. 연결 후 관리자 계정으로 로그인하면 게시글·댓글 수정, 삭제, 숨김과 신고 처리를 할 수 있습니다.'; return; }
+    const { data, error } = await supabase.auth.getSession(); if (error) throw error;
+    const user = data.session?.user;
+    dashboard.disabled = true; list.replaceChildren(); more.hidden = true;
+    if (!user || user.is_anonymous) { status.textContent = '관리자 계정으로 로그인해 주세요.'; return; }
+    const admin = await supabase.from('admins').select('user_id,role').eq('user_id', user.id).maybeSingle();
+    if (admin.error) throw admin.error;
+    if (!admin.data) { status.textContent = '이 계정에는 관리자 권한이 없습니다. 내 계정에서 로그인 상태를 확인해 주세요.'; return; }
+    login.hidden = true;
+    ownerControls.hidden = admin.data.role !== 'owner';
+    creatorControls.hidden = admin.data.role !== 'owner';
+    if (!ownerControls.hidden) await Promise.all([loadRoles(user.id),loadCreatorApprovals()]);
+    const type = filter.value;
+    let total = 0;
+    if (type === 'reports') {
+      const result = await supabase.from('reports').select('id,target_type,target_id,reason,created_at', { count: 'exact' }).eq('status', 'open').order('created_at', { ascending: false }).range(page * 30, page * 30 + 29);
+      if (result.error) throw result.error; total = result.count ?? 0;
+      for (const report of result.data) {
+        const card = el('article', ''); card.className = 'report-card';
+        const targetType = report.target_type as ContentType;
+        const target = await supabase.from(contentTables[targetType]).select('*').eq('id', report.target_id).maybeSingle();
+        if (target.error) throw target.error;
+        const reasons: Record<string, string> = { spam: '스팸 / 광고', harassment: '괴롭힘 / 혐오', unsafe: '개인정보 / 위험한 내용', other: '기타' };
+        card.append(el('h3', reasons[report.reason] ?? report.reason), el('p', new Date(report.created_at).toLocaleString('ko-KR')));
+        if (target.data) card.append(el('strong', target.data.title || target.data.display_name), el('p', target.data.body));
+        else card.append(el('p', '원문이 삭제되어 확인할 수 없습니다.'));
+        const actions = el('div', ''); actions.className = 'form-actions';
+        for (const action of ['dismiss', 'hide']) {
+          const button = document.createElement('button'); button.type = 'button'; button.className = 'button secondary'; button.textContent = action === 'hide' ? '내용 숨기기' : '신고 기각'; button.disabled = action === 'hide' && !target.data;
+          button.addEventListener('click', async () => {
+            button.disabled = true;
+            try { const response = await supabase!.rpc('moderate_report', { p_report_id: report.id, p_action: action }); if (response.error) throw response.error; await load(); }
+            catch (error) { status.textContent = messageOf(error); } finally { button.disabled = action === 'hide' && !target.data; }
+          }); actions.append(button);
+        }
+        card.append(actions); list.append(card);
+      }
+    } else {
+      const contentType = type as ContentType;
+      const result = await supabase.from(contentTables[contentType]).select('*', { count: 'exact' }).order('created_at', { ascending: false }).range(page * 30, page * 30 + 29);
+      if (result.error) throw result.error; total = result.count ?? 0;
+      for (const item of result.data) {
+        const card = el('article', ''); card.className = 'report-card';
+        const visibility = item.status === 'hidden' ? '숨김' : contentType === 'space_post' && item.is_secret ? '비밀글' : '공개';
+        card.append(el('h3', item.title || item.display_name), el('p', `${item.display_name} · ${visibility} · ${new Date(item.created_at).toLocaleString('ko-KR')}`), el('p', item.body), contentActions(item, contentType, load, status, true)); list.append(card);
+      }
+    }
+    dashboard.disabled = false;
+    count.textContent = `전체 ${total}개${total ? ` · ${page * 30 + 1}–${Math.min(total, page * 30 + 30)}` : ''}`;
+    more.hidden = (page + 1) * 30 >= total;
+    status.textContent = total ? '내용을 검토하고 수정하거나 숨길 수 있습니다.' : '표시할 항목이 없습니다.';
+  }
+  const run = () => load().catch((error) => { status.textContent = messageOf(error); refresh.disabled = false; });
+  filter.addEventListener('change', () => { page = 0; run(); });
+  refresh.addEventListener('click', () => { page = 0; run(); });
+  more.addEventListener('click', () => { page++; run(); });
+  grantForm.addEventListener('submit', async (event) => {
+    event.preventDefault(); const submit = grantForm.querySelector<HTMLButtonElement>('button[type="submit"]')!; submit.disabled = true;
+    try { const data = new FormData(grantForm); const response = await supabase!.rpc('grant_community_admin', { p_email: data.get('email'), p_role: data.get('role') }); if (response.error) throw response.error; const session = await supabase!.auth.getSession(); await loadRoles(session.data.session!.user.id); grantForm.reset(); status.textContent = '커뮤니티 관리 권한을 저장했습니다.'; }
+    catch (error) { status.textContent = messageOf(error); } finally { submit.disabled = false; }
+  });
+  creatorGrantForm.addEventListener('submit', async (event) => {
+    event.preventDefault(); const submit = creatorGrantForm.querySelector<HTMLButtonElement>('button[type="submit"]')!; submit.disabled = true;
+    try { const data = new FormData(creatorGrantForm); await setCreatorStatus(String(data.get('email')),data.get('status') as 'approved'|'rejected'|'revoked'); await loadCreatorApprovals(); creatorGrantForm.reset(); status.textContent = 'Creator 상태를 저장했습니다.'; }
+    catch (error) { status.textContent = messageOf(error); } finally { submit.disabled = false; }
+  });
+  run();
+</script>

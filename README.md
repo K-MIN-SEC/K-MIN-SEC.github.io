@@ -83,7 +83,9 @@ npm run cms
 
 Decap 편집기의 **게시 → 지금 게시**는 로컬 모드에서 이 컴퓨터의 파일에 저장한다는 뜻입니다. 인터넷에 배포하지 않습니다. 로컬 서버는 인증 없이 파일을 편집하므로 `127.0.0.1`에만 연결되게 고정했습니다. `npm run cms`를 실행한 터미널을 닫으면 편집 서버도 종료됩니다. Supabase 계정은 로컬 콘텐츠 편집에 필요하지 않습니다.
 
-공개 사이트에서 편집하려면 저장소 업로드와 신뢰할 수 있는 GitHub OAuth 서비스 연결이 추가로 필요합니다. 서비스 주소를 `PUBLIC_CMS_AUTH_URL`에 설정합니다. Pages 빌드는 같은 이름의 GitHub Actions repository variable을 읽습니다. GitHub OAuth client secret을 공개 환경 변수에 넣지 마세요. 공개 편집은 저장소 쓰기 권한이 있는 GitHub 계정으로 인증하며, 방문자용 Supabase 로그인과 별개입니다. 인증 서비스가 없으면 공개 편집기를 활성화하지 않습니다. 저장한 후 Pages 배포 워크플로를 실행해야 공개 페이지가 갱신됩니다.
+공개 사이트는 `/admin/content/`의 GitHub 저장소 편집기를 사용합니다. **GitHub 편집 권한으로 로그인**을 누르면 기존 GitHub 공급자를 통해 `public_repo` 범위에 동의하고, GitHub API가 해당 저장소의 쓰기 권한을 검사합니다. Supabase Community Staff 여부는 편집 권한으로 사용하지 않습니다. 프로젝트·Play·Devlog·프로필 필드 및 미디어 업로드를 지원하고, 저장은 GitHub Contents API의 SHA 비교를 거쳐 커밋합니다. push 후 Pages 배포가 자동 시작됩니다. GitHub 편집 token은 현재 탭의 sessionStorage에 보관하며 연결 해제/로그아웃 시 제거합니다. 편집 중 탭을 닫으면 다시 연결해야 합니다.
+
+별도 서비스 코드는 `apps/creator-space/`에 있습니다. 실행·Cloudflare 배포 방법과 아직 필요한 외부 계정 동의는 해당 디렉터리의 README와 `docs/authoring-completion-rollout.md`에 기록합니다.
 
 ## Devlog 작성
 

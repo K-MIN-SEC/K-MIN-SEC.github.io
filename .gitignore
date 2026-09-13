@@ -9,3 +9,5 @@ dist/
 qa/
 public/vendor/
 qa-audit.json
+.wrangler/
+.dev.vars

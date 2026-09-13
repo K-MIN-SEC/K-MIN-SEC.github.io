@@ -1,0 +1,35 @@
+name: Creator Space build
+on:
+  push:
+    paths: ['apps/creator-space/**', '.github/workflows/creator-space.yml']
+  pull_request:
+    paths: ['apps/creator-space/**', '.github/workflows/creator-space.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/creator-space
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/creator-space/package-lock.json
+      - run: npm ci
+      - run: npm run build
+        env:
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+          PUBLIC_SITE_URL: ${{ vars.CREATOR_SPACE_URL }}
+          PUBLIC_GOOGLE_LOGIN: true
+          PUBLIC_SPACE_EXTENDED: true
+          PUBLIC_CREATOR_FOUNDATION: true
+      - uses: actions/upload-artifact@v7
+        with:
+          name: creator-space-build
+          path: apps/creator-space/dist

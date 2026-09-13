@@ -1,0 +1,21 @@
+---
+import { url } from '../lib/urls';
+---
+<div data-auth-gate>
+  <p class="notice" data-auth-hint>로그인 후 참여할 수 있습니다. <a class="text-link" href={url('account/')}>로그인 / 가입 →</a></p>
+  <fieldset class="community-fields" disabled><slot /></fieldset>
+</div>
+<script>
+  import { supabase } from '../lib/supabase';
+  document.querySelectorAll<HTMLElement>('[data-auth-gate]').forEach((gate) => {
+    const fields = gate.querySelector<HTMLFieldSetElement>('fieldset')!;
+    const hint = gate.querySelector<HTMLElement>('[data-auth-hint]')!;
+    if (!supabase) {
+      hint.textContent = '커뮤니티 오픈 준비 중입니다. 계정 서비스 연결이 끝나면 로그인하고 글을 남길 수 있습니다.';
+      return;
+    }
+    const update = (signedIn: boolean) => { fields.disabled = !signedIn; hint.hidden = signedIn; };
+    supabase.auth.getSession().then(({ data }) => update(Boolean(data.session && !data.session.user.is_anonymous)));
+    supabase.auth.onAuthStateChange((_event, session) => update(Boolean(session && !session.user.is_anonymous)));
+  });
+</script>

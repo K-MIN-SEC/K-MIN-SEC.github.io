@@ -33,6 +33,7 @@ jobs:
           PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
           PUBLIC_CMS_AUTH_URL: ${{ vars.PUBLIC_CMS_AUTH_URL }}
+          PUBLIC_CREATOR_SPACE_URL: ${{ vars.CREATOR_SPACE_URL }}
           PUBLIC_GITHUB_LOGIN: true
           PUBLIC_GOOGLE_LOGIN: true
           PUBLIC_SPACE_EXTENDED: true

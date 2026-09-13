@@ -1,0 +1,11 @@
+---
+import '../styles/base.css';
+import '../styles/creator.css';
+const {title='Creator Space',description='작업을 기록하고, 함께 만들고, 확인된 경험을 쌓는 크리에이터 아카이브.',noindex=false}=Astro.props;
+const canonical=new URL(Astro.url.pathname,import.meta.env.PUBLIC_SITE_URL||Astro.url.origin);
+if(noindex) Astro.response.headers.set('X-Robots-Tag','noindex, nofollow');
+const links=[['발견','/'],['Works','/works/'],['Projects','/projects/'],['사람들','/members/'],['Team Up','/team-up/'],['Events','/events/'],['게시판','/space/']];
+---
+<!doctype html><html lang="ko"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width"/><title>{title} · Creator Space</title><meta name="description" content={description}/><meta name="robots" content={noindex?'noindex, nofollow':'index, follow'}/><link rel="canonical" href={canonical}/><meta property="og:title" content={`${title} · Creator Space`}/><meta property="og:description" content={description}/><meta property="og:type" content="website"/><meta property="og:url" content={canonical}/><meta name="theme-color" content="#101410"/><script type="application/ld+json" is:inline set:html={JSON.stringify({'@context':'https://schema.org','@type':'WebPage',name:title,description,url:canonical.href}).replace(/</g,'\\u003c')}/></head>
+<body><a class="skip-link" href="#main">본문으로 건너뛰기</a><header class="cs-header wrap"><a class="brand" href="/">CREATOR<span>SPACE↗</span></a><nav aria-label="주요 메뉴">{links.map(([label,href])=><a href={href} aria-current={Astro.url.pathname===href?'page':undefined}>{label}</a>)}</nav><div class="cs-actions"><a class="button primary" href="/studio/">+ 작성 / 내 작업</a><a href="/account/" data-account-link>로그인</a></div></header>
+<main class="wrap" id="main"><slot/></main><footer class="site-footer wrap"><div><a class="brand" href="/">CREATOR SPACE</a><p>작업이 쌓이고, 다음 가능성이 이어지는 곳.</p></div><div class="cs-actions"><a href="https://k-min-sec.github.io/">MINSEC ↗</a><a href="/admin/">운영 관리</a><a href="/privacy/">개인정보처리방침</a><a href="mailto:k.min.sec@gmail.com">문의</a></div></footer><script>import {supabase} from '../lib/supabase';supabase?.auth.getSession().then(({data})=>{if(data.session)document.querySelectorAll('[data-account-link]').forEach(e=>e.textContent='내 계정');});</script></body></html>

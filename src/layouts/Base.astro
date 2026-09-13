@@ -8,6 +8,7 @@ const fullTitle = `${title} — MINSEC`;
 const canonical = new URL(Astro.url.pathname.replace(/\/404\/$/, '/404.html'), Astro.site);
 const isPlaceholder = Astro.site?.hostname === 'example.com';
 const nav = [{ label: 'Home', path: '' }, { label: 'Projects', path: 'projects/' }, { label: 'Play', path: 'play/' }, { label: 'Devlog', path: 'devlog/' }, { label: 'About', path: 'about/' }];
+const creatorSpaceUrl = import.meta.env.PUBLIC_CREATOR_SPACE_URL;
 const graph = { '@context': 'https://schema.org', '@graph': [
   { '@type': 'WebSite', '@id': new URL(url(''), Astro.site).href + '#website', name: 'MINSEC', url: new URL(url(''), Astro.site).href, inLanguage: 'ko-KR', description: '게임을 만들고 생성형 AI를 탐구하는 MINSEC의 개인 포트폴리오.' },
   { '@type': 'WebPage', name: fullTitle, description, url: canonical.href, inLanguage: 'ko-KR' },
@@ -42,6 +43,7 @@ const graph = { '@context': 'https://schema.org', '@graph': [
       <a class="brand" href={url('')} aria-label="MINSEC 홈"><img src={url('favicon.svg')} alt="" width="30" height="30" />MINSEC<span class="brand-period">.</span></a>
       <nav aria-label="주요 메뉴">
         {nav.map(({ label, path }) => <a href={url(path)} aria-current={(path === '' ? Astro.url.pathname === url('') : Astro.url.pathname.startsWith(url(path))) ? 'page' : undefined}>{label}</a>)}
+        <a href={creatorSpaceUrl || url('space/')}>Community ↗</a>
       </nav>
       <div class="header-account"><a href={url('account/')} data-account-link>로그인 / 가입</a><a href={url('admin/')}>관리자</a></div>
     </header>
